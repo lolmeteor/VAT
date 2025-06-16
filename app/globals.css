@@ -1,0 +1,76 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%; /* Белый фон по умолчанию для элементов, не переопределенных палитрой */
+    --foreground: 222.2 84% 4.9%; /* Темный текст по умолчанию */
+
+    /* Цвета из ТЗ (используются в tailwind.config.ts) */
+    /* --primary: #003B46; (Глубокая вода) */
+    /* --secondary: #07575B; (Океан) */
+    /* --accent: #66A5AD; (Волна) */
+    /* --muted: #C4DFE6; (Морская пена) */
+
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+
+    --primary-foreground-custom: 190 78% 89%; /* #C4DFE6 - Морская пена */
+    --secondary-foreground-custom: 190 78% 89%; /* #C4DFE6 - Морская пена */
+    --accent-foreground-custom: 190 100% 14%; /* #003B46 - Глубокая вода */
+    --muted-foreground-custom: 190 100% 14%; /* #003B46 - Глубокая вода */
+
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 222.2 84% 4.9%;
+
+    --radius: 0.5rem;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+  }
+
+  .dark {
+    /* Для темной темы, если будет нужна. Пока не используется. */
+    /* Можно будет определить инвертированные или другие цвета для темной темы */
+    --background: 222.2 84% 4.9%;
+    --foreground: 0 0% 98%;
+
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 0 0% 98%;
+
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 0 0% 98%;
+
+    /* --primary-foreground-custom: ... */
+    /* --secondary-foreground-custom: ... */
+    /* --accent-foreground-custom: ... */
+    /* --muted-foreground-custom: ... */
+
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-primary text-primary-foreground; /* Основной фон и текст из ТЗ */
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+  main {
+    flex-grow: 1;
+  }
+}
