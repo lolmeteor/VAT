@@ -34,18 +34,20 @@ export function TelegramLoginButton({
   useEffect(() => {
     if (!ref.current) return
 
-    // Делаем функцию onAuth доступной глобально, чтобы скрипт Telegram мог ее вызвать
+    console.log("Telegram bot name:", settings.telegramBotName) // Отладка
+
+    // Делаем функцию onAuth доступной глобально
     window.onTelegramAuth = (data: any) => {
+      console.log("Telegram auth data:", data) // Отладка
       if (data) {
         onAuth(data)
       } else {
-        // Обработка случая, когда пользователь не авторизовался
         console.warn("Telegram authentication failed or was cancelled.")
       }
     }
 
     const script = document.createElement("script")
-    script.src = "https://telegram.org/js/telegram-widget.js?22" // Версия виджета
+    script.src = "https://telegram.org/js/telegram-widget.js?22"
     script.async = true
     script.setAttribute("data-telegram-login", settings.telegramBotName)
     script.setAttribute("data-size", buttonSize)
@@ -56,15 +58,13 @@ export function TelegramLoginButton({
       script.setAttribute("data-request-access", requestAccess)
     }
     script.setAttribute("data-userpic", showUserPhoto ? "true" : "false")
-    script.setAttribute("data-onauth", "onTelegramAuth(user)") // Вызываем глобальную функцию
+    script.setAttribute("data-onauth", "onTelegramAuth(user)")
 
-    // Важно: data-auth-url не используется, т.к. мы обрабатываем данные на клиенте
-    // и затем отправляем их на наш бэкенд через API-клиент.
+    console.log("Loading Telegram widget with bot:", settings.telegramBotName) // Отладка
 
     ref.current.appendChild(script)
 
     return () => {
-      // Очистка при размонтировании компонента
       if (ref.current && ref.current.contains(script)) {
         ref.current.removeChild(script)
       }

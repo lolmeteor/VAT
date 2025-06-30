@@ -1,49 +1,40 @@
 import type { Config } from "tailwindcss"
 
-const config = {
+const config: Config = {
   darkMode: ["class"],
   content: [
-    "./pages/**/*.{ts,tsx}",
-    "./components/**/*.{ts,tsx}",
-    "./app/**/*.{ts,tsx}",
-    "./src/**/*.{ts,tsx}",
+    "./pages/**/*.{js,ts,jsx,tsx,mdx}",
+    "./components/**/*.{js,ts,jsx,tsx,mdx}",
+    "./app/**/*.{js,ts,jsx,tsx,mdx}",
     "*.{js,ts,jsx,tsx,mdx}",
   ],
-  prefix: "",
   theme: {
-    container: {
-      center: true,
-      padding: "2rem",
-      screens: {
-        "2xl": "1400px",
-      },
-    },
     extend: {
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
-        background: "hsl(var(--background))", // Основной фон приложения
-        foreground: "hsl(var(--foreground))", // Основной цвет текста
+        background: "hsl(var(--background))",
+        foreground: "hsl(var(--foreground))",
         primary: {
-          // Глубокая вода: фон верхней панели, заголовки, фон основного экрана.
-          DEFAULT: "#003B46", // Глубокая вода
-          foreground: "#C4DFE6", // Морская пена (для текста на primary фоне)
+          // Темно-синий/серый фон как на сайте
+          DEFAULT: "#2D3748", // Темно-серый
+          foreground: "#FFFFFF", // Белый текст
         },
         secondary: {
-          // Океан: основные кнопки и активные элементы.
-          DEFAULT: "#07575B", // Океан
-          foreground: "#C4DFE6", // Морская пена (для текста на secondary фоне)
+          // Акцентный цвет для кнопок
+          DEFAULT: "#4A5568", // Средне-серый
+          foreground: "#FFFFFF", // Белый текст
         },
         accent: {
-          // Волна: второстепенные кнопки, прогресс-бар.
-          DEFAULT: "#66A5AD", // Волна
-          foreground: "#003B46", // Глубокая вода (для текста на accent фоне)
+          // Для активных элементов
+          DEFAULT: "#718096", // Светло-серый
+          foreground: "#FFFFFF", // Белый текст
         },
         muted: {
-          // Морская пена: фон счётчика минут, фон уведомлений, подложки для информации.
-          DEFAULT: "#C4DFE6", // Морская пена
-          foreground: "#003B46", // Глубокая вода (для текста на muted фоне)
+          // Для фонов карточек и элементов
+          DEFAULT: "#F7FAFC", // Очень светлый серый
+          foreground: "#2D3748", // Темный текст
         },
         destructive: {
           DEFAULT: "hsl(var(--destructive))",
@@ -65,12 +56,20 @@ const config = {
       },
       keyframes: {
         "accordion-down": {
-          from: { height: "0" },
-          to: { height: "var(--radix-accordion-content-height)" },
+          from: {
+            height: "0",
+          },
+          to: {
+            height: "var(--radix-accordion-content-height)",
+          },
         },
         "accordion-up": {
-          from: { height: "var(--radix-accordion-content-height)" },
-          to: { height: "0" },
+          from: {
+            height: "var(--radix-accordion-content-height)",
+          },
+          to: {
+            height: "0",
+          },
         },
       },
       animation: {
@@ -80,6 +79,5 @@ const config = {
     },
   },
   plugins: [require("tailwindcss-animate")],
-} satisfies Config
-
+}
 export default config

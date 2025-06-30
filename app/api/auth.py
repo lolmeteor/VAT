@@ -41,7 +41,7 @@ async def telegram_login(
         value=session_id,
         max_age=30 * 24 * 60 * 60,  # 30 дней
         httponly=True,
-        secure=True,
+        secure=False,  # <- Для HTTP тестирования
         samesite="lax"
     )
     

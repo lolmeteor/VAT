@@ -24,7 +24,7 @@ export function AppHeader() {
     <header className="sticky top-0 z-50 w-full border-b border-accent/20 bg-primary/80 backdrop-blur-sm">
       <div className="container flex h-16 items-center justify-between">
         <Link href="/" className="flex items-center space-x-2">
-          <span className="text-xl font-bold text-secondary">VAT</span>
+          <span className="text-xl font-bold text-secondary">VERTEX</span>
         </Link>
         <div className="flex items-center space-x-4">
           {isLoading ? (

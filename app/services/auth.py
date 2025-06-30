@@ -21,18 +21,34 @@ class AuthService:
         """
         bot_token = settings.telegram_bot_token
         
-        # Создаем строку для проверки подписи
+        # ОТЛАДОЧНЫЕ ЛОГИ
+        print(f"🔍 Проверка Telegram auth для пользователя: {auth_data.id}")
+        print(f"🔑 Bot token (первые 10 символов): {bot_token[:10]}...")
+        print(f"📝 Полученные данные: {auth_data.dict()}")
+        
+        # Создаем строку для проверки подписи (ИСКЛЮЧАЕМ hash)
+        auth_dict = auth_data.dict(exclude={'hash'})
+        # Убираем None значения
+        auth_dict = {k: v for k, v in auth_dict.items() if v is not None}
+        
         check_string = "\n".join([
             f"{key}={value}" 
-            for key, value in sorted(auth_data.dict(exclude={'hash'}).items())
-            if value is not None
+            for key, value in sorted(auth_dict.items())
         ])
+        
+        print(f"📝 Check string: {check_string}")
         
         # Вычисляем ожидаемый хеш
         secret_key = hashlib.sha256(bot_token.encode()).digest()
         expected_hash = hmac.new(secret_key, check_string.encode(), hashlib.sha256).hexdigest()
         
-        return hmac.compare_digest(expected_hash, auth_data.hash)
+        print(f"🔐 Expected hash: {expected_hash}")
+        print(f"🔐 Received hash: {auth_data.hash}")
+        
+        result = hmac.compare_digest(expected_hash, auth_data.hash)
+        print(f"✅ Verification result: {result}")
+        
+        return result
     
     def get_or_create_user(self, auth_data: TelegramAuthData) -> UserResponse:
         """

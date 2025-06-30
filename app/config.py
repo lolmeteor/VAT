@@ -1,6 +1,6 @@
 """
 Конфигурация приложения VAT (Voice Analysis Tool)
-Загружает все переменные окружения и настройки
+Продакшн настройки с HTTPS
 """
 from pydantic_settings import BaseSettings
 from typing import Optional
@@ -9,19 +9,19 @@ class Settings(BaseSettings):
     # Основные настройки приложения
     app_env: str = "production"
     app_secret_key: str
-    app_base_url: Optional[str] = None
-    cors_allowed_origins: str = "*"
+    app_base_url: str = "https://www.vertexassistent.ru"
+    cors_allowed_origins: str = "https://www.vertexassistent.ru,https://www.vertexassistent.ru:443"
     
     # База данных MySQL
     db_host: str = "server268.hosting.reg.ru"
     db_port: int = 3306
-    db_name: str = "u3151465_VAT"
+    db_name: str = "u3151465_VAT2"
     db_user: str = "u3151465_Aleksey"
     db_password: str
     
     # Telegram
     telegram_bot_token: str
-    telegram_login_widget_bot_name: str = "voiceanalysis_bot"
+    telegram_login_widget_bot_name: str = "VertexAIassistantBOT"
     
     # S3 хранилище Reg.ru
     s3_endpoint_url: str = "https://s3.regru.cloud"
@@ -31,9 +31,9 @@ class Settings(BaseSettings):
     s3_region: str = "ru-central1"
     
     # Make.com вебхуки
-    make_transcription_webhook_url: str
+    make_transcription_webhook_url: str = "https://hook.eu2.make.com/osl3us5x5bk8uqytihx73d8o24ebw57q"
     
-    # Вебхуки для анализов (12 типов)
+    # Вебхуки для анализов
     make_analysis_webhooks: dict = {
         "kp": "https://hook.eu2.make.com/58ezljut6m4qmhohni26xm2toii696jr",
         "first_meeting": "https://hook.eu2.make.com/ui6aobd4krptmbmj5vhc6ckzahd2q12n",
@@ -49,18 +49,12 @@ class Settings(BaseSettings):
         "speaker4_negative": "https://hook.eu2.make.com/5fvxpwvl0enl9ckbblinpvffcuck82y4"
     }
     
-    # Юкасса (будет добавлено позже)
-    yukassa_shop_id: Optional[str] = None
-    yukassa_secret_key: Optional[str] = None
-    
     @property
     def database_url(self) -> str:
-        """Формирует URL для подключения к базе данных"""
         return f"mysql+pymysql://{self.db_user}:{self.db_password}@{self.db_host}:{self.db_port}/{self.db_name}?charset=utf8mb4"
     
     class Config:
         env_file = ".env"
         case_sensitive = False
 
-# Создаем глобальный экземпляр настроек
 settings = Settings()

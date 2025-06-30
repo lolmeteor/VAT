@@ -1,18 +1,19 @@
 import type React from "react"
 import type { Metadata } from "next"
-import { Inter } from "next/font/google"
 import "./globals.css"
+import { Inter } from "next/font/google"
 import { cn } from "@/lib/utils"
-import { AppHeader } from "@/components/header"
-import { AuthProvider } from "@/contexts/AuthContext" // Импортируем AuthProvider
-import { Toaster } from "sonner" // Для уведомлений
 
-const inter = Inter({ subsets: ["latin"], variable: "--font-sans" })
+const inter = Inter({
+  subsets: ["latin", "cyrillic"],
+  variable: "--font-inter",
+  weight: ["300", "400", "500", "600", "700", "800", "900"],
+})
 
 export const metadata: Metadata = {
-  title: "VAT - Сервис транскрибации и анализа аудио",
-  description: "Автоматическая транскрибация аудиофайлов и проведение текстового анализа.",
-    generator: 'v0.dev'
+  title: "v0 App",
+  description: "Created with v0",
+  generator: "v0.dev",
 }
 
 export default function RootLayout({
@@ -21,18 +22,8 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="ru" suppressHydrationWarning>
-      <body className={cn("min-h-screen bg-primary font-sans antialiased", inter.variable)}>
-        <AuthProvider>
-          {" "}
-          {/* Оборачиваем приложение в AuthProvider */}
-          <div className="relative flex min-h-screen flex-col">
-            <AppHeader />
-            <main className="flex-1">{children}</main>
-            <Toaster richColors position="top-right" /> {/* Компонент для уведомлений */}
-          </div>
-        </AuthProvider>
-      </body>
+    <html lang="en">
+      <body className={cn("min-h-screen bg-muted font-sans antialiased", inter.variable)}>{children}</body>
     </html>
   )
 }

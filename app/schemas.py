@@ -82,13 +82,15 @@ class AnalysisRequest(BaseModel):
     transcription_id: str
     analysis_types: List[AnalysisType]
 
+# ИСПРАВЛЕННАЯ схема для Telegram авторизации
 class TelegramAuthData(BaseModel):
-    id: int
+    id: int  # Telegram user ID
     first_name: Optional[str] = None
     last_name: Optional[str] = None
     username: Optional[str] = None
-    auth_date: int
-    hash: str
+    photo_url: Optional[str] = None # Добавлено это поле
+    auth_date: int  # Unix timestamp
+    hash: str  # Telegram signature
 
 # Схемы для ответов API
 class ApiResponse(BaseModel):

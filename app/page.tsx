@@ -1,4 +1,5 @@
 "use client"
+
 import { Checkbox } from "@/components/ui/checkbox"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
@@ -78,10 +79,9 @@ export default function WelcomePage() {
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="text-center">
-            <h2 className="text-xl font-semibold text-primary">Welcome to Audio Analysis</h2>
+            <h2 className="text-xl font-semibold text-primary">VERTEX AI ASSISTANT</h2>
             <p className="text-sm text-primary/80">
-              Get insights from your audio files. Upload an audio file to receive a comprehensive analysis. We&apos;ll
-              handle everything else, delivering accurate and helpful insights.
+              Say it. We'll map it. Загрузите аудиофайл для получения комплексного анализа.
             </p>
           </div>
           <div className="space-y-3">

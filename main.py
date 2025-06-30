@@ -1,5 +1,6 @@
 """
 Главное приложение FastAPI для VAT (Voice Analysis Tool)
+Продакшн конфигурация
 """
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -9,9 +10,8 @@ import uvicorn
 
 from app.config import settings
 from app.database import engine, Base
-from app.api import auth, files, analyses, webhooks, user
+from app.api import auth, files, analyses, webhooks, user, common
 
-# Создаем таблицы при запуске (если их нет)
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup
@@ -20,7 +20,6 @@ async def lifespan(app: FastAPI):
     # Shutdown
     pass
 
-# Создаем приложение FastAPI
 app = FastAPI(
     title="VAT - Voice Analysis Tool",
     description="Сервис транскрибации и анализа аудиофайлов",
@@ -28,12 +27,15 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# Настройка CORS
+# CORS для HTTPS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.cors_allowed_origins.split(",") if settings.cors_allowed_origins != "*" else ["*"],
+    allow_origins=[
+        "https://194.58.126.129",
+        "https://194.58.126.129:443"
+    ],
     allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
 )
 
@@ -43,8 +45,8 @@ app.include_router(files.router, prefix="/api")
 app.include_router(analyses.router, prefix="/api")
 app.include_router(webhooks.router, prefix="/api")
 app.include_router(user.router, prefix="/api")
+app.include_router(common.router, prefix="/api")
 
-# Обработчик глобальных ошибок
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
     return JSONResponse(
@@ -52,32 +54,14 @@ async def global_exception_handler(request: Request, exc: Exception):
         content={
             "success": False,
             "message": "Внутренняя ошибка сервера",
-            "detail": str(exc) if settings.app_env == "development" else "Обратитесь в поддержку"
+            "detail": "Обратитесь в поддержку"
         }
     )
-
-# Корневой эндпоинт
-@app.get("/")
-async def root():
-    return {
-        "success": True,
-        "message": "VAT API работает",
-        "version": "1.0.0",
-        "environment": settings.app_env
-    }
-
-# Эндпоинт для проверки здоровья приложения
-@app.get("/health")
-async def health_check():
-    return {
-        "status": "healthy",
-        "timestamp": "2025-01-16T12:00:00Z"
-    }
 
 if __name__ == "__main__":
     uvicorn.run(
         "main:app",
-        host="0.0.0.0",
+        host="127.0.0.1",
         port=8000,
-        reload=settings.app_env == "development"
+        reload=False
     )
