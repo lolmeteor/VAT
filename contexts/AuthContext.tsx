@@ -2,12 +2,24 @@
 
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react"
 import { apiClient } from "@/lib/api"
-import type { UserResponse } from "@/app/schemas" // Предполагается, что схемы доступны
+
+interface UserResponse {
+  user_id: string
+  telegram_id: number
+  username?: string
+  first_name?: string
+  last_name?: string
+  balance_minutes: number
+  agreed_to_personal_data: boolean
+  agreed_to_terms: boolean
+  onboarding_completed: boolean
+  created_at: string
+}
 
 interface AuthContextType {
   user: UserResponse | null
   isLoading: boolean
-  login: (telegramAuthData: any) => Promise<void> // Тип для telegramAuthData нужно уточнить
+  login: (telegramAuthData: any) => Promise<void>
   logout: () => Promise<void>
   checkAuth: () => Promise<void>
 }

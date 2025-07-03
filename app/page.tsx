@@ -8,23 +8,27 @@ import { useRouter } from "next/navigation"
 import { Mic, Loader2 } from "lucide-react"
 import { useAuth } from "@/contexts/AuthContext"
 import { TelegramLoginButton } from "@/components/telegram-login-button"
-import { toast } from "sonner"
 
 export default function WelcomePage() {
   const [agreedPersonalData, setAgreedPersonalData] = useState(false)
   const [agreedTerms, setAgreedTerms] = useState(false)
+  const [isClient, setIsClient] = useState(false)
   const router = useRouter()
   const { user, login, isLoading: authIsLoading } = useAuth()
 
   const allAgreementsChecked = agreedPersonalData && agreedTerms
 
+  // Устанавливаем флаг клиентской стороны
   useEffect(() => {
-    if (user && !authIsLoading) {
+    setIsClient(true)
+  }, [])
+
+  useEffect(() => {
+    if (isClient && user && !authIsLoading) {
       // Если пользователь уже авторизован, перенаправляем его
-      // ИСПРАВЛЕНО: Всегда проверяем онбординг для авторизованного пользователя
       checkOnboardingStatus()
     }
-  }, [user, authIsLoading, router])
+  }, [user, authIsLoading, router, isClient])
 
   const checkOnboardingStatus = async () => {
     try {
@@ -52,21 +56,22 @@ export default function WelcomePage() {
 
   const handleTelegramAuth = async (telegramUserData: any) => {
     if (!allAgreementsChecked) {
-      toast.error("Пожалуйста, примите все условия для продолжения.")
+      alert("Пожалуйста, примите все условия для продолжения.")
       return
     }
     try {
       await login(telegramUserData)
-      toast.success("Успешная авторизация!")
+      alert("Успешная авторизация!")
 
-      // ИСПРАВЛЕНО: Убираем проверку localStorage, всегда проверяем на сервере
+      // Проверяем статус онбординга
       await checkOnboardingStatus()
     } catch (error: any) {
-      toast.error(`Ошибка авторизации: ${error.message || "Попробуйте снова."}`)
+      alert(`Ошибка авторизации: ${error.message || "Попробуйте снова."}`)
     }
   }
 
-  if (authIsLoading) {
+  // Показываем загрузку до инициализации клиента
+  if (!isClient || authIsLoading) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center bg-primary p-4">
         <Loader2 className="h-16 w-16 animate-spin text-secondary" />
@@ -128,11 +133,7 @@ export default function WelcomePage() {
           </div>
         </CardContent>
         <CardFooter className="flex flex-col items-center space-y-4">
-          {authIsLoading ? (
-            <Loader2 className="h-8 w-8 animate-spin text-secondary" />
-          ) : (
-            <TelegramLoginButton onAuth={handleTelegramAuth} buttonSize="large" />
-          )}
+          <TelegramLoginButton onAuth={handleTelegramAuth} buttonSize="large" />
           {!allAgreementsChecked && (
             <p className="text-xs text-destructive">Необходимо принять условия для входа через Telegram.</p>
           )}
