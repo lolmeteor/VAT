@@ -1,7 +1,7 @@
 """
 API эндпоинты для работы с аудиофайлами
 """
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Request
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Request, Response
 from sqlalchemy.orm import Session
 from typing import List
 import uuid
@@ -9,6 +9,7 @@ from app.database import get_db
 from app.services.auth import AuthService
 from app.services.s3 import S3Service
 from app.services.make_webhook import MakeWebhookService
+from app.services.document_generator import DocumentGeneratorService
 from app.models import User, AudioFile, Transcription
 from app.schemas import AudioFileResponse, ApiResponse, UserResponse
 from app.models import AudioFileStatus, ProcessingStatus
@@ -138,3 +139,44 @@ async def get_file_info(
         raise HTTPException(status_code=404, detail="Файл не найден")
     
     return AudioFileResponse.from_orm(audio_file)
+
+@router.get("/{file_id}/transcription/download/{doc_format}")
+async def download_transcription(
+    file_id: str,
+    doc_format: str,
+    current_user: UserResponse = Depends(get_current_user_dependency),
+    db: Session = Depends(get_db)
+):
+    """
+    Генерация и скачивание документа с транскрипцией.
+    """
+    if doc_format not in ["txt", "docx"]:
+        raise HTTPException(status_code=400, detail="Неподдерживаемый формат. Доступны: txt, docx")
+
+    transcription = db.query(Transcription).join(AudioFile).filter(
+        AudioFile.file_id == file_id,
+        AudioFile.user_id == current_user.user_id
+    ).first()
+
+    if not transcription:
+        raise HTTPException(status_code=404, detail="Транскрипция не найдена или у вас нет доступа.")
+    
+    if transcription.status != ProcessingStatus.COMPLETED:
+        raise HTTPException(status_code=400, detail="Транскрипция еще не завершена.")
+
+    doc_service = DocumentGeneratorService()
+    
+    if doc_format == "txt":
+        content = doc_service.generate_transcription_txt(transcription)
+        media_type = "text/plain"
+        filename = f"transcription_{file_id}.txt"
+    else: # docx
+        content = doc_service.generate_transcription_docx(transcription)
+        media_type = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        filename = f"transcription_{file_id}.docx"
+
+    return Response(
+        content=content,
+        media_type=media_type,
+        headers={"Content-Disposition": f"attachment; filename={filename}"}
+    )

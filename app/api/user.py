@@ -7,7 +7,7 @@ from sqlalchemy import func
 from app.database import get_db
 from app.services.auth import AuthService
 from app.models import User, AudioFile, Analysis, Payment
-from app.schemas import UserStatsResponse, PaymentResponse, UserResponse
+from app.schemas import UserStatsResponse, PaymentResponse, UserResponse, OnboardingStatusResponse, ApiResponse
 from app.models import ProcessingStatus, PaymentStatus
 
 router = APIRouter(prefix="/user", tags=["user"])
@@ -27,6 +27,39 @@ async def get_current_user_dependency(request: Request, db: Session = Depends(ge
         raise HTTPException(status_code=401, detail="Сессия недействительна")
     
     return user
+
+# ДОБАВЛЕНО: Эндпоинт для проверки статуса онбординга
+@router.get("/onboarding-status", response_model=OnboardingStatusResponse)
+async def get_onboarding_status(
+    current_user: UserResponse = Depends(get_current_user_dependency),
+    db: Session = Depends(get_db)
+):
+    """
+    Получение статуса завершения онбординга
+    """
+    user = db.query(User).filter(User.user_id == current_user.user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Пользователь не найден")
+    
+    return OnboardingStatusResponse(onboarding_completed=bool(user.onboarding_completed))
+
+# ДОБАВЛЕНО: Эндпоинт для завершения онбординга
+@router.post("/complete-onboarding", response_model=ApiResponse)
+async def complete_onboarding(
+    current_user: UserResponse = Depends(get_current_user_dependency),
+    db: Session = Depends(get_db)
+):
+    """
+    Отметка о завершении онбординга
+    """
+    user = db.query(User).filter(User.user_id == current_user.user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Пользователь не найден")
+    
+    user.onboarding_completed = 1
+    db.commit()
+    
+    return ApiResponse(success=True, message="Онбординг завершен")
 
 @router.get("/stats", response_model=UserStatsResponse)
 async def get_user_stats(

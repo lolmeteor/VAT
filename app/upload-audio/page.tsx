@@ -1,7 +1,6 @@
 "use client"
 
 import { CardFooter } from "@/components/ui/card"
-
 import { useState, useCallback } from "react"
 import { useDropzone } from "react-dropzone"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -9,12 +8,14 @@ import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 import { UploadCloud, FileCheck, AlertCircle } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { useRouter } from "next/navigation"
 
 export default function UploadAudioPage() {
   const [file, setFile] = useState<File | null>(null)
   const [uploadProgress, setUploadProgress] = useState(0)
   const [uploadStatus, setUploadStatus] = useState<"idle" | "uploading" | "success" | "error">("idle")
   const [errorMessage, setErrorMessage] = useState("")
+  const router = useRouter()
 
   const onDrop = useCallback((acceptedFiles: File[], fileRejections: any[]) => {
     setUploadStatus("idle")
@@ -52,25 +53,44 @@ export default function UploadAudioPage() {
     setUploadStatus("uploading")
     setUploadProgress(0)
 
-    // TODO: Заменить на реальную загрузку на backend API
-    // Имитация загрузки
-    const interval = setInterval(() => {
-      setUploadProgress((prev) => {
-        if (prev >= 95) {
-          return prev
-        }
-        return prev + 5
-      })
-    }, 200)
+    try {
+      const formData = new FormData()
+      formData.append("file", file)
 
-    // Имитация ответа сервера
-    setTimeout(() => {
-      clearInterval(interval)
+      // Симуляция прогресса загрузки
+      const progressInterval = setInterval(() => {
+        setUploadProgress((prev) => {
+          if (prev >= 90) return prev
+          return prev + Math.random() * 10
+        })
+      }, 500)
+
+      const response = await fetch("/api/files/upload", {
+        method: "POST",
+        body: formData,
+        credentials: "include",
+      })
+
+      clearInterval(progressInterval)
       setUploadProgress(100)
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.detail || "Ошибка загрузки файла")
+      }
+
+      const result = await response.json()
       setUploadStatus("success")
-      // TODO: После успешной загрузки, перенаправить на страницу выбора анализа
-      // router.push(`/analysis/${fileId}`)
-    }, 4000)
+
+      // Перенаправляем на страницу анализа
+      setTimeout(() => {
+        router.push(`/analysis/${result.file_id}`)
+      }, 1500)
+    } catch (error) {
+      setUploadStatus("error")
+      setErrorMessage(error instanceof Error ? error.message : "Произошла ошибка при загрузке")
+      setUploadProgress(0)
+    }
   }
 
   const renderContent = () => {
@@ -81,6 +101,7 @@ export default function UploadAudioPage() {
             <FileCheck className="mx-auto h-12 w-12 text-green-500" />
             <p className="mt-2 font-semibold text-primary">Файл успешно загружен!</p>
             <p className="text-sm text-primary/80">{file?.name}</p>
+            <p className="text-xs text-primary/60 mt-1">Перенаправление на страницу анализа...</p>
           </div>
         )
       case "error":
@@ -129,7 +150,7 @@ export default function UploadAudioPage() {
           {uploadStatus === "uploading" && (
             <div className="mt-4">
               <Progress value={uploadProgress} className="w-full [&>div]:bg-accent" />
-              <p className="mt-2 text-center text-sm text-primary">Загрузка... {uploadProgress}%</p>
+              <p className="mt-2 text-center text-sm text-primary">Загрузка... {Math.round(uploadProgress)}%</p>
             </div>
           )}
         </CardContent>
@@ -139,7 +160,7 @@ export default function UploadAudioPage() {
             disabled={!file || uploadStatus === "uploading" || uploadStatus === "success"}
             className="w-full bg-secondary text-secondary-foreground hover:bg-secondary/90"
           >
-            Загрузить и начать анализ
+            {uploadStatus === "uploading" ? "Загрузка..." : "Загрузить и начать анализ"}
           </Button>
         </CardFooter>
       </Card>

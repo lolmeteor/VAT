@@ -30,18 +30,37 @@ const onboardingSteps = [
 
 export default function OnboardingPage() {
   const [currentStep, setCurrentStep] = useState(0)
+  const [isCompleting, setIsCompleting] = useState(false)
   const router = useRouter()
 
   const isFirstStep = currentStep === 0
   const isLastStep = currentStep === onboardingSteps.length - 1
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (!isLastStep) {
       setCurrentStep((prev) => prev + 1)
     } else {
-      // Переход на основную страницу приложения после онбординга
-      localStorage.setItem("onboardingCompleted", "true") // Сохраняем отметку
-      router.push("/upload-audio")
+      // ИСПРАВЛЕНО: Отправляем запрос на сервер для отметки завершения онбординга
+      setIsCompleting(true)
+      try {
+        const response = await fetch("/api/user/complete-onboarding", {
+          method: "POST",
+          credentials: "include",
+        })
+
+        if (response.ok) {
+          // ИСПРАВЛЕНО: Убираем localStorage, полагаемся только на сервер
+          router.push("/upload-audio")
+        } else {
+          console.error("Ошибка завершения онбординга")
+          router.push("/upload-audio") // Все равно переходим
+        }
+      } catch (error) {
+        console.error("Ошибка завершения онбординга:", error)
+        router.push("/upload-audio") // Все равно переходим
+      } finally {
+        setIsCompleting(false)
+      }
     }
   }
 
@@ -53,9 +72,28 @@ export default function OnboardingPage() {
     }
   }
 
-  const handleSkip = () => {
-    localStorage.setItem("onboardingCompleted", "true") // Сохраняем отметку
-    router.push("/upload-audio")
+  const handleSkip = async () => {
+    // ИСПРАВЛЕНО: Отправляем запрос на сервер для отметки завершения онбординга
+    setIsCompleting(true)
+    try {
+      const response = await fetch("/api/user/complete-onboarding", {
+        method: "POST",
+        credentials: "include",
+      })
+
+      if (response.ok) {
+        // ИСПРАВЛЕНО: Убираем localStorage, полагаемся только на сервер
+        router.push("/upload-audio")
+      } else {
+        console.error("Ошибка завершения онбординга")
+        router.push("/upload-audio") // Все равно переходим
+      }
+    } catch (error) {
+      console.error("Ошибка завершения онбординга:", error)
+      router.push("/upload-audio") // Все равно переходим
+    } finally {
+      setIsCompleting(false)
+    }
   }
 
   const { icon: Icon, title, description, englishTitle, englishDescription } = onboardingSteps[currentStep]
@@ -84,14 +122,28 @@ export default function OnboardingPage() {
             ))}
           </div>
           <div className="grid w-full grid-cols-3 gap-2">
-            <Button variant="ghost" onClick={handleBack} className="text-accent-foreground hover:bg-accent/20">
+            <Button
+              variant="ghost"
+              onClick={handleBack}
+              className="text-accent-foreground hover:bg-accent/20"
+              disabled={isCompleting}
+            >
               Назад
             </Button>
-            <Button variant="ghost" onClick={handleSkip} className="text-accent-foreground hover:bg-accent/20">
+            <Button
+              variant="ghost"
+              onClick={handleSkip}
+              className="text-accent-foreground hover:bg-accent/20"
+              disabled={isCompleting}
+            >
               Пропустить
             </Button>
-            <Button onClick={handleNext} className="bg-secondary text-secondary-foreground hover:bg-secondary/90">
-              {isLastStep ? "Начать" : "Далее"}
+            <Button
+              onClick={handleNext}
+              className="bg-secondary text-secondary-foreground hover:bg-secondary/90"
+              disabled={isCompleting}
+            >
+              {isCompleting ? "..." : isLastStep ? "Начать" : "Далее"}
             </Button>
           </div>
         </CardFooter>

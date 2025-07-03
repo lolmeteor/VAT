@@ -1,7 +1,7 @@
 """
 Pydantic схемы для валидации данных API
 """
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, computed_field
 from typing import Optional, List
 from datetime import datetime
 from app.models import AudioFileStatus, ProcessingStatus, AnalysisType, PaymentStatus
@@ -22,6 +22,8 @@ class UserResponse(UserBase):
     balance_minutes: int
     agreed_to_personal_data: bool
     agreed_to_terms: bool
+    # ДОБАВЛЕНО: Поле для отслеживания завершения онбординга
+    onboarding_completed: bool
     created_at: datetime
     
     class Config:
@@ -46,6 +48,20 @@ class TranscriptionResponse(BaseModel):
     status: ProcessingStatus
     created_at: datetime
     updated_at: datetime
+
+    @computed_field
+    @property
+    def download_url_txt(self) -> Optional[str]:
+        if self.status == ProcessingStatus.COMPLETED:
+            return f"/api/files/{self.file_id}/transcription/download/txt"
+        return None
+
+    @computed_field
+    @property
+    def download_url_docx(self) -> Optional[str]:
+        if self.status == ProcessingStatus.COMPLETED:
+            return f"/api/files/{self.file_id}/transcription/download/docx"
+        return None
     
     class Config:
         from_attributes = True
@@ -56,10 +72,23 @@ class AnalysisResponse(BaseModel):
     transcription_id: str
     analysis_type: AnalysisType
     status: ProcessingStatus
-    s3_docx_link: Optional[str]
-    s3_pdf_link: Optional[str]
     created_at: datetime
     updated_at: datetime
+
+    @computed_field
+    @property
+    def download_url_docx(self) -> Optional[str]:
+        if self.status == ProcessingStatus.COMPLETED:
+            return f"/api/analyses/{self.analysis_id}/download/docx"
+        return None
+
+    @computed_field
+    @property
+    def download_url_pdf(self) -> Optional[str]:
+        # Генерация PDF пока не реализована, но можно оставить заглушку
+        if self.status == ProcessingStatus.COMPLETED:
+            return f"/api/analyses/{self.analysis_id}/download/pdf"
+        return None
     
     class Config:
         from_attributes = True
@@ -103,3 +132,18 @@ class UserStatsResponse(BaseModel):
     used_minutes: int
     analyses_completed: int
     files_uploaded: int
+
+# ДОБАВЛЕНО: Схема для статуса онбординга
+class OnboardingStatusResponse(BaseModel):
+    onboarding_completed: bool
+
+class TranscriptionWebhookData(BaseModel):
+    file_id: str
+    status: str  # "completed" или "failed"
+    duration_seconds: Optional[int] = None
+    error_message: Optional[str] = None
+
+class AnalysisWebhookData(BaseModel):
+    analysis_id: str
+    status: str  # "completed" или "failed"
+    error_message: Optional[str] = None

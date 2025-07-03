@@ -1,7 +1,7 @@
 """
 SQLAlchemy модели для всех таблиц базы данных
 """
-from sqlalchemy import Column, String, BigInteger, Integer, Text, TIMESTAMP, Enum, DECIMAL, ForeignKey
+from sqlalchemy import Column, String, BigInteger, Integer, Text, TIMESTAMP, Enum, DECIMAL, ForeignKey, JSON
 from sqlalchemy.dialects.mysql import TINYINT
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
@@ -50,6 +50,8 @@ class User(Base):
     balance_minutes = Column(Integer, nullable=False, default=0)
     agreed_to_personal_data = Column(TINYINT(1), nullable=False, default=0)
     agreed_to_terms = Column(TINYINT(1), nullable=False, default=0)
+    # ДОБАВЛЕНО: Поле для отслеживания завершения онбординга
+    onboarding_completed = Column(TINYINT(1), nullable=False, default=0)
     created_at = Column(TIMESTAMP, nullable=False, server_default=func.current_timestamp())
     updated_at = Column(TIMESTAMP, nullable=False, server_default=func.current_timestamp(), onupdate=func.current_timestamp())
     
@@ -95,6 +97,9 @@ class Transcription(Base):
     transcription_id = Column(String(36), primary_key=True)
     file_id = Column(String(36), ForeignKey("audio_files.file_id"), unique=True, nullable=False)
     s3_link_text = Column(String(512), nullable=True)
+    transcription_text = Column(Text, nullable=True)
+    speakers_count = Column(Integer, nullable=True)
+    language_detected = Column(String(10), nullable=True)
     status = Column(Enum(ProcessingStatus), nullable=False, default=ProcessingStatus.PENDING)
     error_message = Column(Text, nullable=True)
     created_at = Column(TIMESTAMP, nullable=False, server_default=func.current_timestamp())
@@ -112,6 +117,9 @@ class Analysis(Base):
     analysis_type = Column(Enum(AnalysisType), nullable=False)
     s3_docx_link = Column(String(512), nullable=True)
     s3_pdf_link = Column(String(512), nullable=True)
+    analysis_text = Column(Text, nullable=True)
+    analysis_summary = Column(Text, nullable=True)
+    key_points = Column(JSON, nullable=True)
     status = Column(Enum(ProcessingStatus), nullable=False, default=ProcessingStatus.PENDING)
     error_message = Column(Text, nullable=True)
     created_at = Column(TIMESTAMP, nullable=False, server_default=func.current_timestamp())

@@ -21,10 +21,34 @@ export default function WelcomePage() {
   useEffect(() => {
     if (user && !authIsLoading) {
       // Если пользователь уже авторизован, перенаправляем его
-      // Можно на /upload-audio или на /onboarding, если онбординг еще не пройден
-      router.push("/upload-audio")
+      // ИСПРАВЛЕНО: Всегда проверяем онбординг для авторизованного пользователя
+      checkOnboardingStatus()
     }
   }, [user, authIsLoading, router])
+
+  const checkOnboardingStatus = async () => {
+    try {
+      // Проверяем статус онбординга на сервере
+      const response = await fetch("/api/user/onboarding-status", {
+        credentials: "include",
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        if (data.onboarding_completed) {
+          router.push("/upload-audio")
+        } else {
+          router.push("/onboarding")
+        }
+      } else {
+        // Если не удалось получить статус, по умолчанию идем на онбординг
+        router.push("/onboarding")
+      }
+    } catch (error) {
+      console.error("Ошибка проверки статуса онбординга:", error)
+      router.push("/onboarding")
+    }
+  }
 
   const handleTelegramAuth = async (telegramUserData: any) => {
     if (!allAgreementsChecked) {
@@ -35,13 +59,8 @@ export default function WelcomePage() {
       await login(telegramUserData)
       toast.success("Успешная авторизация!")
 
-      // Проверяем, был ли онбординг завершен ранее
-      const onboardingCompleted = localStorage.getItem("onboardingCompleted")
-      if (!onboardingCompleted) {
-        router.push("/onboarding")
-      } else {
-        router.push("/upload-audio")
-      }
+      // ИСПРАВЛЕНО: Убираем проверку localStorage, всегда проверяем на сервере
+      await checkOnboardingStatus()
     } catch (error: any) {
       toast.error(`Ошибка авторизации: ${error.message || "Попробуйте снова."}`)
     }
@@ -57,7 +76,6 @@ export default function WelcomePage() {
   }
 
   // Если пользователь уже загружен и он есть, не показываем страницу входа
-  // (этот кейс покрывается useEffect выше, но можно добавить и здесь для надежности)
   if (user) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center bg-primary p-4">

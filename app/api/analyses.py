@@ -1,7 +1,7 @@
 """
 API эндпоинты для работы с анализами
 """
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from sqlalchemy.orm import Session
 from typing import List
 import uuid
@@ -11,6 +11,7 @@ from app.services.make_webhook import MakeWebhookService
 from app.models import Transcription, Analysis, AudioFile
 from app.schemas import AnalysisResponse, AnalysisRequest, ApiResponse, UserResponse
 from app.models import ProcessingStatus, AnalysisType
+from app.services.document_generator import DocumentGeneratorService
 
 router = APIRouter(prefix="/analyses", tags=["analyses"])
 
@@ -171,3 +172,42 @@ async def get_available_analysis_types():
             ]
         }
     }
+
+@router.get("/{analysis_id}/download/{doc_format}")
+async def download_analysis(
+    analysis_id: str,
+    doc_format: str,
+    current_user: UserResponse = Depends(get_current_user_dependency),
+    db: Session = Depends(get_db)
+):
+    """
+    Генерация и скачивание документа с анализом.
+    """
+    if doc_format not in ["docx", "pdf"]:
+        raise HTTPException(status_code=400, detail="Неподдерживаемый формат. Доступны: docx, pdf")
+
+    analysis = db.query(Analysis).join(Transcription).join(AudioFile).filter(
+        Analysis.analysis_id == analysis_id,
+        AudioFile.user_id == current_user.user_id
+    ).first()
+
+    if not analysis:
+        raise HTTPException(status_code=404, detail="Анализ не найден или у вас нет доступа.")
+
+    if analysis.status != ProcessingStatus.COMPLETED:
+        raise HTTPException(status_code=400, detail="Анализ еще не завершен.")
+
+    doc_service = DocumentGeneratorService()
+
+    if doc_format == "docx":
+        content = doc_service.generate_analysis_docx(analysis)
+        media_type = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        filename = f"analysis_{analysis.analysis_type.value}_{analysis_id}.docx"
+    else: # pdf - пока не реализовано, но эндпоинт есть
+        raise HTTPException(status_code=501, detail="Генерация PDF пока не реализована.")
+
+    return Response(
+        content=content,
+        media_type=media_type,
+        headers={"Content-Disposition": f"attachment; filename={filename}"}
+    )
