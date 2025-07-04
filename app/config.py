@@ -31,7 +31,7 @@ class Settings(BaseSettings):
     s3_region: str = "ru-central1"
     
     # Make.com вебхуки
-    make_transcription_webhook_url: str = "https://hook.eu2.make.com/osl3us5x5bk8uqytihx73d8o24ebw57q"
+    make_transcription_webhook_url: str = "https://hook.eu2.make.com/4i2h74esxc38zqlxz6oexklp1ux1eacq"
     
     # Вебхуки для анализов
     make_analysis_webhooks: dict = {
