@@ -7,6 +7,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
 import { HelpCircle, Loader2 } from "lucide-react"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { useRouter } from "next/navigation"
 
 // Тип для анализа, полученного с API
 type AnalysisType = {
@@ -20,6 +21,7 @@ export default function SelectAnalysisPage({ params }: { params: { fileId: strin
   const [selectedTypes, setSelectedTypes] = useState<Set<string>>(new Set())
   const [isLoading, setIsLoading] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const router = useRouter()
 
   useEffect(() => {
     // TODO: Заменить на реальный вызов API /api/analyses/types/available
@@ -69,14 +71,29 @@ export default function SelectAnalysisPage({ params }: { params: { fileId: strin
       return
     }
     setIsSubmitting(true)
-    console.log("Запуск анализа для файла:", params.fileId)
-    console.log("Выбранные типы:", Array.from(selectedTypes))
-    // TODO: Реальный вызов API POST /api/analyses/start
-    await new Promise((resolve) => setTimeout(resolve, 1500))
-    setIsSubmitting(false)
-    alert("Анализ запущен! Вы будете перенаправлены на страницу результатов.")
-    // TODO: Перенаправить на страницу результатов
-    // router.push(`/results/${params.fileId}`)
+
+    try {
+      const response = await fetch("/api/analyses/start", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          transcription_id: params.fileId,
+          analysis_types: Array.from(selectedTypes),
+        }),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.detail || "Ошибка запуска анализа")
+      }
+
+      router.push(`/results/${params.fileId}`)
+    } catch (error: any) {
+      alert(error.message)
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
