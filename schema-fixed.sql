@@ -85,7 +85,7 @@ CREATE TABLE `analyses` (
 -- Хранит историю пополнений баланса пользователями через Юкассу.
 -- =================================================================
 CREATE TABLE `payments` (
-  `payment_id` VARCHAR(36) NOT NULL COMMENT 'Уникальный идентификатор платежа (от Юкассы)',
+  `payment_id` VARCHAR(36) NOT NULL COMMENT 'Уникальный идентификатор платежа (о�� Юкассы)',
   `user_id` VARCHAR(36) NOT NULL COMMENT 'Ссылка на пользователя, совершившего платеж',
   `amount` DECIMAL(10, 2) NOT NULL COMMENT 'Сумма платежа',
   `currency` VARCHAR(3) NOT NULL DEFAULT 'RUB' COMMENT 'Валюта платежа',
