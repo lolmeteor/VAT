@@ -27,12 +27,14 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# CORS для HTTPS
+# Исправляем CORS настройки
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "https://194.58.126.129",
-        "https://194.58.126.129:443"
+        "https://www.vertexassistant.ru",
+        "https://www.vertexassistant.ru:443",
+        "https://vertexassistant.ru",
+        "https://vertexassistant.ru:443"
     ],
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],

@@ -1,5 +1,5 @@
 """
-Тест подключения к S3 Reg.ru
+Тест подключения к S3 Reg.ru с правильным бакетом vatbucket
 """
 import boto3
 import os
@@ -15,25 +15,25 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 load_dotenv()
 
 def test_s3_connection():
-    print("🔍 Тестируем подключение к S3 Reg.ru...")
+    print("🔍 Тестируем подключение к S3 Reg.ru с бакетом vatbucket...")
     
     # Настройки S3 - правильный способ для Reg.ru
     s3_client = boto3.client(
         's3',
-        endpoint_url=os.getenv('S3_ENDPOINT_URL'),
-        aws_access_key_id=os.getenv('S3_ACCESS_KEY_ID'),
-        aws_secret_access_key=os.getenv('S3_SECRET_ACCESS_KEY'),
-        region_name=os.getenv('S3_REGION'),
+        endpoint_url='https://s3.regru.cloud',
+        aws_access_key_id='8TVU2GJ3DLFZVS5MUI3L',
+        aws_secret_access_key='1ARu78H9fvqqDmDpDLJFVkVt0U5RQ1v8qlNdhpgb',
+        region_name='ru-central1',
         verify=False  # Отключаем SSL проверку
     )
     
-    bucket_name = os.getenv('S3_BUCKET_NAME')
+    bucket_name = "vatbucket"  # ПРАВИЛЬНОЕ НАЗВАНИЕ БАКЕТА
     print(f"📦 Бакет: {bucket_name}")
-    print(f"🌐 Endpoint: {os.getenv('S3_ENDPOINT_URL')}")
+    print(f"🌐 Endpoint: https://s3.regru.cloud")
     
     try:
         # Проверяем доступ к бакету
-        print(f"\n1. Проверяем доступ к бакету...")
+        print(f"\n1. Проверяем доступ к бакету vatbucket...")
         response = s3_client.list_objects_v2(Bucket=bucket_name, MaxKeys=5)
         print("✅ Подключение к S3 успешно!")
         
@@ -45,7 +45,7 @@ def test_s3_connection():
             print("📁 Бакет пустой")
         
         # Тестируем загрузку файла
-        test_content = b"Test upload from Python - VAT Project"
+        test_content = b"Test upload from Python - VAT Project - vatbucket"
         test_key = "test/python-connection-test.txt"
         
         print(f"\n2. Загружаем тестовый файл: {test_key}")
@@ -64,7 +64,7 @@ def test_s3_connection():
         print(f"✅ Содержимое файла: {downloaded_content.decode()}")
         
         # Генерируем публичную ссылку
-        file_url = f"{os.getenv('S3_ENDPOINT_URL')}/{bucket_name}/{test_key}"
+        file_url = f"https://s3.regru.cloud/{bucket_name}/{test_key}"
         print(f"🔗 Публичная ссылка: {file_url}")
         
         # Удаляем тестовый файл
@@ -72,7 +72,7 @@ def test_s3_connection():
         s3_client.delete_object(Bucket=bucket_name, Key=test_key)
         print("✅ Тестовый файл удален!")
         
-        print(f"\n🎉 S3 подключение работает корректно!")
+        print(f"\n🎉 S3 подключение к бакету vatbucket работает корректно!")
         return True
         
     except ClientError as e:

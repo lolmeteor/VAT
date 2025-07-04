@@ -9,25 +9,25 @@ class Settings(BaseSettings):
     # Основные настройки приложения
     app_env: str = "production"
     app_secret_key: str
-    app_base_url: str = "https://www.vertexassistent.ru"
-    cors_allowed_origins: str = "https://www.vertexassistent.ru,https://www.vertexassistent.ru:443"
+    app_base_url: str = "https://www.vertexassistant.ru"
+    cors_allowed_origins: str = "https://www.vertexassistant.ru,https://www.vertexassistant.ru:443,https://vertexassistant.ru"
     
-    # База данных MySQL
-    db_host: str = "server268.hosting.reg.ru"
+    # База данных MySQL - ВАШИ РЕАЛЬНЫЕ ДАННЫЕ
+    db_host: str = "127.0.0.1"
     db_port: int = 3306
-    db_name: str = "u3151465_VAT2"
-    db_user: str = "u3151465_Aleksey"
-    db_password: str
+    db_name: str = "vat_db"
+    db_user: str = "transcr"
+    db_password: str = "transcr123"
     
     # Telegram
     telegram_bot_token: str
     telegram_login_widget_bot_name: str = "VertexAIassistantBOT"
     
-    # S3 хранилище Reg.ru
+    # S3 хранилище Reg.ru - ПРАВИЛЬНЫЙ БАКЕТ vatbucket
     s3_endpoint_url: str = "https://s3.regru.cloud"
     s3_access_key_id: str
     s3_secret_access_key: str
-    s3_bucket_name: str = "smartmashabot"
+    s3_bucket_name: str = "vatbucket"  # ИСПРАВЛЕНО!
     s3_region: str = "ru-central1"
     
     # Make.com вебхуки
