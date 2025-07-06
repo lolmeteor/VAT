@@ -2,13 +2,12 @@
 API эндпоинты для работы с пользователем
 """
 from fastapi import APIRouter, Depends, HTTPException, Request
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import func
 from app.database import get_db
 from app.services.auth import AuthService
-from app.models import User, AudioFile, Analysis, Payment
-from app.schemas import UserStatsResponse, PaymentResponse, UserResponse, OnboardingStatusResponse, ApiResponse
-from app.models import ProcessingStatus, PaymentStatus
+from app.models import User, AudioFile, Analysis, Payment, Tariff, ProcessingStatus
+from app.schemas import UserStatsResponse, PaymentResponse, UserResponse, OnboardingStatusResponse, ApiResponse, TariffResponse
 
 router = APIRouter(prefix="/user", tags=["user"])
 
@@ -41,7 +40,7 @@ async def get_onboarding_status(
     if not user:
         raise HTTPException(status_code=404, detail="Пользователь не найден")
     
-    return OnboardingStatusResponse(onboarding_completed=bool(user.onboarding_completed))
+    return OnboardingStatusResponse(onboarding_completed=user.onboarding_completed)
 
 # ДОБАВЛЕНО: Эндпоинт для завершения онбординга
 @router.post("/complete-onboarding", response_model=ApiResponse)
@@ -56,7 +55,7 @@ async def complete_onboarding(
     if not user:
         raise HTTPException(status_code=404, detail="Пользователь не найден")
     
-    user.onboarding_completed = 1
+    user.onboarding_completed = True
     db.commit()
     
     return ApiResponse(success=True, message="Онбординг завершен")
@@ -75,22 +74,20 @@ async def get_user_stats(
     ).scalar() or 0
     
     analyses_completed = db.query(func.count(Analysis.analysis_id)).join(
-        AudioFile, AudioFile.file_id == Analysis.transcription_id
+        AudioFile, AudioFile.file_id == Analysis.transcription.has(file_id=AudioFile.file_id)
     ).filter(
         AudioFile.user_id == current_user.user_id,
         Analysis.status == ProcessingStatus.COMPLETED
     ).scalar() or 0
     
-    # Подсчитываем использованные минуты (примерная логика)
-    # В реальности это должно учитывать длительность обработанных файлов
-    used_minutes = db.query(func.sum(AudioFile.duration_seconds)).filter(
-        AudioFile.user_id == current_user.user_id
+    used_seconds = db.query(func.sum(AudioFile.duration_seconds)).filter(
+        AudioFile.user_id == current_user.user_id,
+        AudioFile.duration_seconds.isnot(None)
     ).scalar() or 0
-    used_minutes = int(used_minutes / 60) if used_minutes else 0
     
     return UserStatsResponse(
         balance_minutes=current_user.balance_minutes,
-        used_minutes=used_minutes,
+        used_minutes=round(used_seconds / 60),
         analyses_completed=analyses_completed,
         files_uploaded=files_uploaded
     )
@@ -103,57 +100,16 @@ async def get_user_payments(
     """
     Получение истории платежей пользователя
     """
-    payments = db.query(Payment).filter(
+    payments = db.query(Payment).options(joinedload(Payment.tariff)).filter(
         Payment.user_id == current_user.user_id
     ).order_by(Payment.created_at.desc()).all()
     
     return [PaymentResponse.from_orm(payment) for payment in payments]
 
-@router.get("/tariffs")
-async def get_available_tariffs():
+@router.get("/tariffs", response_model=list[TariffResponse])
+async def get_available_tariffs(db: Session = Depends(get_db)):
     """
-    Получение доступных тарифов
+    Получение доступных тарифов из базы данных
     """
-    tariffs = [
-        {
-            "id": "free",
-            "name": "Бесплатно",
-            "minutes": 90,
-            "price": 0,
-            "currency": "RUB",
-            "description": "Стартовый пакет для новых пользователей",
-            "is_popular": False
-        },
-        {
-            "id": "basic",
-            "name": "Базовый пакет",
-            "minutes": 300,
-            "price": 500,
-            "currency": "RUB",
-            "description": "Оптимальный выбор для регулярного использования",
-            "is_popular": False
-        },
-        {
-            "id": "popular",
-            "name": "Популярный",
-            "minutes": 500,
-            "price": 800,
-            "currency": "RUB",
-            "description": "Лучшее соотношение цены и качества",
-            "is_popular": True
-        },
-        {
-            "id": "maximum",
-            "name": "Максимальный",
-            "minutes": 2000,
-            "price": 2500,
-            "currency": "RUB",
-            "description": "Для профессионального использования",
-            "is_popular": False
-        }
-    ]
-    
-    return {
-        "success": True,
-        "data": {"tariffs": tariffs}
-    }
+    tariffs = db.query(Tariff).filter(Tariff.is_active == True).order_by(Tariff.price).all()
+    return tariffs

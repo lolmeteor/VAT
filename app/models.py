@@ -1,7 +1,7 @@
 """
 SQLAlchemy модели для всех таблиц базы данных
 """
-from sqlalchemy import Column, String, BigInteger, Integer, Text, TIMESTAMP, Enum, DECIMAL, ForeignKey, JSON
+from sqlalchemy import Column, String, BigInteger, Integer, Text, TIMESTAMP, Enum, DECIMAL, ForeignKey, JSON, Boolean
 from sqlalchemy.dialects.mysql import TINYINT
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
@@ -48,14 +48,12 @@ class User(Base):
     first_name = Column(String(255), nullable=True)
     last_name = Column(String(255), nullable=True)
     balance_minutes = Column(Integer, nullable=False, default=0)
-    agreed_to_personal_data = Column(TINYINT(1), nullable=False, default=0)
-    agreed_to_terms = Column(TINYINT(1), nullable=False, default=0)
-    # ДОБАВЛЕНО: Поле для отслеживания завершения онбординга
-    onboarding_completed = Column(TINYINT(1), nullable=False, default=0)
+    agreed_to_personal_data = Column(Boolean, nullable=False, default=False)
+    agreed_to_terms = Column(Boolean, nullable=False, default=False)
+    onboarding_completed = Column(Boolean, nullable=False, default=False)
     created_at = Column(TIMESTAMP, nullable=False, server_default=func.current_timestamp())
     updated_at = Column(TIMESTAMP, nullable=False, server_default=func.current_timestamp(), onupdate=func.current_timestamp())
     
-    # Связи
     sessions = relationship("Session", back_populates="user", cascade="all, delete-orphan")
     audio_files = relationship("AudioFile", back_populates="user", cascade="all, delete-orphan")
     payments = relationship("Payment", back_populates="user", cascade="all, delete-orphan")
@@ -70,7 +68,6 @@ class Session(Base):
     expires_at = Column(TIMESTAMP, nullable=False)
     created_at = Column(TIMESTAMP, nullable=False, server_default=func.current_timestamp())
     
-    # Связи
     user = relationship("User", back_populates="sessions")
 
 class AudioFile(Base):
@@ -87,7 +84,6 @@ class AudioFile(Base):
     created_at = Column(TIMESTAMP, nullable=False, server_default=func.current_timestamp())
     updated_at = Column(TIMESTAMP, nullable=False, server_default=func.current_timestamp(), onupdate=func.current_timestamp())
     
-    # Связи
     user = relationship("User", back_populates="audio_files")
     transcription = relationship("Transcription", back_populates="audio_file", uselist=False, cascade="all, delete-orphan")
 
@@ -105,7 +101,6 @@ class Transcription(Base):
     created_at = Column(TIMESTAMP, nullable=False, server_default=func.current_timestamp())
     updated_at = Column(TIMESTAMP, nullable=False, server_default=func.current_timestamp(), onupdate=func.current_timestamp())
     
-    # Связи
     audio_file = relationship("AudioFile", back_populates="transcription")
     analyses = relationship("Analysis", back_populates="transcription", cascade="all, delete-orphan")
 
@@ -125,7 +120,6 @@ class Analysis(Base):
     created_at = Column(TIMESTAMP, nullable=False, server_default=func.current_timestamp())
     updated_at = Column(TIMESTAMP, nullable=False, server_default=func.current_timestamp(), onupdate=func.current_timestamp())
     
-    # Связи
     transcription = relationship("Transcription", back_populates="analyses")
 
 class Payment(Base):
@@ -133,13 +127,25 @@ class Payment(Base):
     
     payment_id = Column(String(36), primary_key=True)
     user_id = Column(String(36), ForeignKey("users.user_id"), nullable=False)
+    tariff_id = Column(String(50), ForeignKey("tariffs.tariff_id"), nullable=True) # Связь с тарифом
     amount = Column(DECIMAL(10, 2), nullable=False)
     currency = Column(String(3), nullable=False, default="RUB")
     minutes_added = Column(Integer, nullable=False)
-    tariff_description = Column(String(255), nullable=True)
     status = Column(Enum(PaymentStatus), nullable=False, default=PaymentStatus.PENDING)
     created_at = Column(TIMESTAMP, nullable=False, server_default=func.current_timestamp())
     updated_at = Column(TIMESTAMP, nullable=False, server_default=func.current_timestamp(), onupdate=func.current_timestamp())
     
-    # Связи
     user = relationship("User", back_populates="payments")
+    tariff = relationship("Tariff")
+
+class Tariff(Base):
+    __tablename__ = "tariffs"
+    
+    tariff_id = Column(String(50), primary_key=True)
+    name = Column(String(255), nullable=False)
+    minutes = Column(Integer, nullable=False)
+    price = Column(DECIMAL(10, 2), nullable=False)
+    currency = Column(String(3), nullable=False, default="RUB")
+    description = Column(Text, nullable=True)
+    is_popular = Column(Boolean, nullable=False, default=False)
+    is_active = Column(Boolean, nullable=False, default=True)

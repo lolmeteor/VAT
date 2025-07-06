@@ -11,7 +11,7 @@ from app.services.s3 import S3Service
 from app.services.make_webhook import MakeWebhookService
 from app.services.document_generator import DocumentGeneratorService
 from app.models import User, AudioFile, Transcription
-from app.schemas import AudioFileResponse, ApiResponse, UserResponse
+from app.schemas import AudioFileResponse, ApiResponse, UserResponse, TranscriptionResponse
 from app.models import AudioFileStatus, ProcessingStatus
 
 router = APIRouter(prefix="/files", tags=["files"])
@@ -139,6 +139,35 @@ async def get_file_info(
         raise HTTPException(status_code=404, detail="Файл не найден")
     
     return AudioFileResponse.from_orm(audio_file)
+
+# ДОБАВЛЯЕМ недостающий эндпоинт для получения transcription по file_id
+@router.get("/{file_id}/transcription", response_model=TranscriptionResponse)
+async def get_transcription_by_file_id(
+    file_id: str,
+    current_user: UserResponse = Depends(get_current_user_dependency),
+    db: Session = Depends(get_db)
+):
+    """
+    Получение транскрипции по file_id
+    """
+    # Проверяем что файл принадлежит пользователю
+    audio_file = db.query(AudioFile).filter(
+        AudioFile.file_id == file_id,
+        AudioFile.user_id == current_user.user_id
+    ).first()
+    
+    if not audio_file:
+        raise HTTPException(status_code=404, detail="Файл не найден")
+    
+    # Получаем транскрипцию для этого файла
+    transcription = db.query(Transcription).filter(
+        Transcription.file_id == file_id
+    ).first()
+    
+    if not transcription:
+        raise HTTPException(status_code=404, detail="Транскрипция не найдена")
+    
+    return TranscriptionResponse.from_orm(transcription)
 
 @router.get("/{file_id}/transcription/download/{doc_format}")
 async def download_transcription(
