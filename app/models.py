@@ -9,10 +9,10 @@ from app.database import Base
 import enum
 
 class AudioFileStatus(str, enum.Enum):
-    UPLOADING = "UPLOADING"
-    UPLOADED = "UPLOADED"
-    PROCESSING_FAILED = "PROCESSING_FAILED"
-    DELETED = "DELETED"
+    uploading = "uploading"
+    uploaded = "uploaded"
+    processing_failed = "processing_failed"
+    deleted = "deleted"
 
 class ProcessingStatus(str, enum.Enum):
     PENDING = "pending"
