@@ -7,7 +7,6 @@ Wants=mysql.service
 Type=simple
 User=root
 WorkingDirectory=/opt/vat
-Environment=PATH=/opt/vat/venv/bin
 EnvironmentFile=/opt/vat/.env
 ExecStart=/opt/vat/venv/bin/python -m uvicorn main:app --host 0.0.0.0 --port 8000
 Restart=always
@@ -17,7 +16,7 @@ StandardError=journal
 
 # Ограничения ресурсов
 MemoryMax=1G
-CPUQuota=80%
+CPUQuota=50%
 
 [Install]
 WantedBy=multi-user.target

@@ -29,7 +29,7 @@ async def transcription_completed(
         raise HTTPException(status_code=404, detail=f"Транскрибация для file_id {webhook_data.file_id} не найдена")
     
     if webhook_data.status == "completed":
-        transcription.status = ProcessingStatus.COMPLETED
+        transcription.status = ProcessingStatus.completed
         
         # Обновляем длительность файла для биллинга
         if webhook_data.duration_seconds is not None:
@@ -37,7 +37,7 @@ async def transcription_completed(
             if audio_file:
                 audio_file.duration_seconds = webhook_data.duration_seconds
     else:
-        transcription.status = ProcessingStatus.FAILED
+        transcription.status = ProcessingStatus.failed
         transcription.error_message = webhook_data.error_message or "Неизвестная ошибка от Make.com"
         
     db.commit()
@@ -60,9 +60,9 @@ async def analysis_completed(
         raise HTTPException(status_code=404, detail=f"Анализ с id {webhook_data.analysis_id} не найден")
     
     if webhook_data.status == "completed":
-        analysis.status = ProcessingStatus.COMPLETED
+        analysis.status = ProcessingStatus.completed
     else:
-        analysis.status = ProcessingStatus.FAILED
+        analysis.status = ProcessingStatus.failed
         analysis.error_message = webhook_data.error_message or "Неизвестная ошибка от Make.com"
         
     db.commit()

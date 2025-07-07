@@ -15,10 +15,10 @@ class AudioFileStatus(str, enum.Enum):
     deleted = "deleted"
 
 class ProcessingStatus(str, enum.Enum):
-    PENDING = "pending"
-    PROCESSING = "processing"
-    COMPLETED = "completed"
-    FAILED = "failed"
+    pending = "pending"
+    processing = "processing"
+    completed = "completed"
+    failed = "failed"
 
 class AnalysisType(str, enum.Enum):
     KP = "kp"
@@ -35,9 +35,9 @@ class AnalysisType(str, enum.Enum):
     SPEAKER4_NEGATIVE = "speaker4_negative"
 
 class PaymentStatus(str, enum.Enum):
-    PENDING = "pending"
-    SUCCEEDED = "succeeded"
-    CANCELED = "canceled"
+    pending = "pending"
+    succeeded = "succeeded"
+    canceled = "canceled"
 
 class User(Base):
     __tablename__ = "users"
@@ -99,7 +99,7 @@ class Transcription(Base):
     transcription_text = Column(Text, nullable=True)
     speakers_count = Column(Integer, nullable=True)
     language_detected = Column(String(10), nullable=True)
-    status = Column(Enum(ProcessingStatus), nullable=False, default=ProcessingStatus.PENDING)
+    status = Column(Enum(ProcessingStatus), nullable=False, default=ProcessingStatus.pending)
     error_message = Column(Text, nullable=True)
     created_at = Column(TIMESTAMP, nullable=False, server_default=func.current_timestamp())
     updated_at = Column(TIMESTAMP, nullable=False, server_default=func.current_timestamp(), onupdate=func.current_timestamp())
@@ -119,7 +119,7 @@ class Analysis(Base):
     analysis_text = Column(Text, nullable=True)
     analysis_summary = Column(Text, nullable=True)
     key_points = Column(JSON, nullable=True)
-    status = Column(Enum(ProcessingStatus), nullable=False, default=ProcessingStatus.PENDING)
+    status = Column(Enum(ProcessingStatus), nullable=False, default=ProcessingStatus.pending)
     error_message = Column(Text, nullable=True)
     created_at = Column(TIMESTAMP, nullable=False, server_default=func.current_timestamp())
     updated_at = Column(TIMESTAMP, nullable=False, server_default=func.current_timestamp(), onupdate=func.current_timestamp())
@@ -136,7 +136,7 @@ class Payment(Base):
     currency = Column(String(3), nullable=False, default="RUB")
     minutes_added = Column(Integer, nullable=False)
     tariff_description = Column(String(255), nullable=True)
-    status = Column(Enum(PaymentStatus), nullable=False, default=PaymentStatus.PENDING)
+    status = Column(Enum(PaymentStatus), nullable=False, default=PaymentStatus.pending)
     created_at = Column(TIMESTAMP, nullable=False, server_default=func.current_timestamp())
     updated_at = Column(TIMESTAMP, nullable=False, server_default=func.current_timestamp(), onupdate=func.current_timestamp())
     
