@@ -5,15 +5,15 @@ from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.services.auth import AuthService
-from app.schemas import TelegramAuthRequest, AuthResponse
+from app.schemas import TelegramAuthData, ApiResponse, UserResponse
 import logging
 
 logger = logging.getLogger(__name__)
-router = APIRouter()
+router = APIRouter(prefix="/auth", tags=["auth"])
 
-@router.post("/auth/telegram", response_model=AuthResponse)
+@router.post("/telegram", response_model=UserResponse)
 async def telegram_auth(
-    auth_data: TelegramAuthRequest,
+    auth_data: TelegramAuthData,
     request: Request,
     response: Response,
     db: Session = Depends(get_db)
@@ -25,14 +25,14 @@ async def telegram_auth(
         auth_service = AuthService(db)
         
         # Проверяем подпись Telegram
-        if not auth_service.verify_telegram_auth(auth_data.dict()):
+        if not auth_service.verify_telegram_auth(auth_data):
             raise HTTPException(status_code=400, detail="Неверная подпись Telegram")
         
         # Создаем или обновляем пользователя
-        user = await auth_service.create_or_update_user(auth_data)
+        user = auth_service.get_or_create_user(auth_data)
         
         # Создаем сессию
-        session = await auth_service.create_session(
+        session_id = auth_service.create_session(
             user.user_id,
             request.headers.get("user-agent"),
             request.client.host if request.client else None
@@ -41,25 +41,20 @@ async def telegram_auth(
         # Устанавливаем cookie с сессией
         response.set_cookie(
             key="session_id",
-            value=session.session_id,
+            value=session_id,
             max_age=30 * 24 * 60 * 60,  # 30 дней
             httponly=True,
             secure=True,
             samesite="lax"
         )
         
-        return AuthResponse(
-            success=True,
-            message="Успешная авторизация",
-            user_id=user.user_id,
-            session_id=session.session_id
-        )
+        return user
         
     except Exception as e:
         logger.error(f"Ошибка авторизации через Telegram: {e}")
         raise HTTPException(status_code=500, detail="Ошибка авторизации")
 
-@router.post("/auth/logout")
+@router.post("/logout", response_model=ApiResponse)
 async def logout(
     request: Request,
     response: Response,
@@ -72,18 +67,23 @@ async def logout(
         session_id = request.cookies.get("session_id")
         if session_id:
             auth_service = AuthService(db)
-            await auth_service.delete_session(session_id)
+            # Удаляем сессию из БД
+            from app.models import Session as UserSession
+            session = db.query(UserSession).filter(UserSession.session_id == session_id).first()
+            if session:
+                db.delete(session)
+                db.commit()
         
         # Удаляем cookie
         response.delete_cookie("session_id")
         
-        return {"success": True, "message": "Успешный выход"}
+        return ApiResponse(success=True, message="Успешный выход")
         
     except Exception as e:
         logger.error(f"Ошибка при выходе: {e}")
         raise HTTPException(status_code=500, detail="Ошибка выхода")
 
-@router.get("/auth/me")
+@router.get("/me", response_model=UserResponse)
 async def get_current_user(
     request: Request,
     db: Session = Depends(get_db)
@@ -97,20 +97,12 @@ async def get_current_user(
             raise HTTPException(status_code=401, detail="Не авторизован")
         
         auth_service = AuthService(db)
-        user = await auth_service.get_user_by_session(session_id)
+        user = auth_service.get_user_by_session(session_id)
         
         if not user:
             raise HTTPException(status_code=401, detail="Сессия недействительна")
         
-        return {
-            "user_id": user.user_id,
-            "telegram_id": user.telegram_id,
-            "username": user.username,
-            "first_name": user.first_name,
-            "last_name": user.last_name,
-            "balance_minutes": user.balance_minutes,
-            "onboarding_completed": bool(user.onboarding_completed)
-        }
+        return user
         
     except HTTPException:
         raise
