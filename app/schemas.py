@@ -93,20 +93,7 @@ class AnalysisResponse(BaseModel):
     class Config:
         from_attributes = True
 
-# Новая схема для тарифов
-class TariffResponse(BaseModel):
-    tariff_id: str
-    name: str
-    minutes: int
-    price: float
-    currency: str
-    description: Optional[str]
-    is_popular: bool
-    
-    class Config:
-        from_attributes = True
-
-# Схема для платежей
+# Схемы для платежей
 class PaymentResponse(BaseModel):
     payment_id: str
     amount: float
@@ -115,7 +102,6 @@ class PaymentResponse(BaseModel):
     tariff_description: Optional[str]
     status: PaymentStatus
     created_at: datetime
-    tariff: Optional[TariffResponse] = None # Включаем информацию о тарифе
     
     class Config:
         from_attributes = True
@@ -124,9 +110,6 @@ class PaymentResponse(BaseModel):
 class AnalysisRequest(BaseModel):
     transcription_id: str
     analysis_types: List[AnalysisType]
-
-class CreatePaymentRequest(BaseModel):
-    tariff_id: str
 
 # ИСПРАВЛЕННАЯ схема для Telegram авторизации
 class TelegramAuthData(BaseModel):
@@ -153,10 +136,6 @@ class UserStatsResponse(BaseModel):
 # ДОБАВЛЕНО: Схема для статуса онбординга
 class OnboardingStatusResponse(BaseModel):
     onboarding_completed: bool
-
-class CreatePaymentResponse(BaseModel):
-    payment_id: str
-    confirmation_url: str # Ссылка для редиректа на страницу оплаты
 
 class TranscriptionWebhookData(BaseModel):
     file_id: str

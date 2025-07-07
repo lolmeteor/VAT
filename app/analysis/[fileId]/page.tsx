@@ -5,12 +5,11 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
-import { HelpCircle, Loader2, AlertTriangle } from "lucide-react"
+import { HelpCircle, Loader2 } from "lucide-react"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { useRouter } from "next/navigation"
-import { apiClient } from "@/lib/api"
-import { toast } from "sonner"
 
+// Тип для анализа, полученного с API
 type AnalysisType = {
   id: string
   name: string
@@ -22,104 +21,105 @@ export default function SelectAnalysisPage({ params }: { params: { fileId: strin
   const [selectedTypes, setSelectedTypes] = useState<Set<string>>(new Set())
   const [isLoading, setIsLoading] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [error, setError] = useState<string | null>(null)
   const [transcriptionId, setTranscriptionId] = useState<string>("")
   const router = useRouter()
 
   useEffect(() => {
     const fetchData = async () => {
       setIsLoading(true)
-      setError(null)
       try {
-        const transcriptionResponse = await apiClient.get<{ transcription_id: string }>(
-          `/files/${params.fileId}/transcription`,
-        )
-        setTranscriptionId(transcriptionResponse.transcription_id)
+        // Получаем transcription_id по file_id
+        const transcriptionResponse = await fetch(`/api/files/${params.fileId}/transcription`, {
+          credentials: "include",
+        })
 
-        const typesResponse = await apiClient.get<{ data: { types: AnalysisType[] } }>("/analyses/types/available")
-        setAnalysisTypes(typesResponse.data.types)
-      } catch (err: any) {
-        setError(err.message || "Не удалось загрузить данные для анализа.")
-        toast.error(err.message || "Ошибка загрузки данных.")
+        if (transcriptionResponse.ok) {
+          const transcriptionData = await transcriptionResponse.json()
+          setTranscriptionId(transcriptionData.transcription_id)
+        }
+
+        // Получаем доступные типы анализа
+        const typesResponse = await fetch("/api/analyses/types/available", {
+          credentials: "include",
+        })
+
+        if (typesResponse.ok) {
+          const typesData = await typesResponse.json()
+          setAnalysisTypes(typesData.data.types)
+        } else {
+          // Fallback данные если API недоступен
+          setAnalysisTypes([
+            { id: "kp", name: "КП", description: "Анализ коммерческого предложения" },
+            { id: "first_meeting", name: "Первая встреча", description: "Анализ первой встречи с клиентом" },
+            { id: "protocol", name: "Протокол", description: "Формирование протокола встречи" },
+            {
+              id: "speaker1_psycho",
+              name: "Анализ Спикер 1 (псих.)",
+              description: "Психологический анализ речи спикера 1",
+            },
+            {
+              id: "speaker1_negative",
+              name: "Анализ Спикер 1 (негатив)",
+              description: "Выявление негативных факторов в речи спикера 1",
+            },
+          ])
+        }
+      } catch (error) {
+        console.error("Ошибка загрузки данных:", error)
+        // Используем fallback данные
+        setAnalysisTypes([
+          { id: "kp", name: "КП", description: "Анализ коммерческого предложения" },
+          { id: "first_meeting", name: "Первая встреча", description: "Анализ первой встречи с клиентом" },
+          { id: "protocol", name: "Протокол", description: "Формирование протокола встречи" },
+        ])
       } finally {
         setIsLoading(false)
       }
     }
+
     fetchData()
   }, [params.fileId])
 
   const handleSelectType = (typeId: string, checked: boolean) => {
     const newSelectedTypes = new Set(selectedTypes)
-    if (checked) newSelectedTypes.add(typeId)
-    else newSelectedTypes.delete(typeId)
+    if (checked) {
+      newSelectedTypes.add(typeId)
+    } else {
+      newSelectedTypes.delete(typeId)
+    }
     setSelectedTypes(newSelectedTypes)
   }
 
   const handleStartAnalysis = async () => {
     if (selectedTypes.size === 0) {
-      toast.warning("Пожалуйста, выберите хотя бы один тип анализа.")
+      alert("Пожалуйста, выберите хотя бы один тип анализа.")
       return
     }
+
     setIsSubmitting(true)
+
     try {
-      await apiClient.post("/analyses/start", {
-        transcription_id: transcriptionId,
-        analysis_types: Array.from(selectedTypes),
+      const response = await fetch("/api/analyses/start", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          transcription_id: transcriptionId || params.fileId, // используем transcription_id или fallback
+          analysis_types: Array.from(selectedTypes),
+        }),
       })
-      toast.success("Анализ успешно запущен!")
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.detail || "Ошибка запуска анализа")
+      }
+
       router.push(`/results/${params.fileId}`)
-    } catch (err: any) {
-      toast.error(`Ошибка запуска анализа: ${err.message}`)
+    } catch (error: any) {
+      alert(error.message)
     } finally {
       setIsSubmitting(false)
     }
-  }
-
-  const renderContent = () => {
-    if (isLoading) {
-      return (
-        <div className="flex items-center justify-center py-8">
-          <Loader2 className="h-8 w-8 animate-spin text-secondary" />
-        </div>
-      )
-    }
-    if (error) {
-      return (
-        <div className="flex flex-col items-center justify-center py-8 text-center text-destructive">
-          <AlertTriangle className="h-8 w-8" />
-          <p className="mt-2 font-semibold">Ошибка</p>
-          <p className="text-sm">{error}</p>
-        </div>
-      )
-    }
-    return (
-      <div className="space-y-4">
-        <TooltipProvider>
-          {analysisTypes.map((type) => (
-            <div key={type.id} className="flex items-center justify-between rounded-lg bg-primary/5 p-4">
-              <div className="flex items-center space-x-3">
-                <Checkbox
-                  id={type.id}
-                  onCheckedChange={(checked) => handleSelectType(type.id, Boolean(checked))}
-                  className="border-accent data-[state=checked]:bg-accent data-[state=checked]:text-accent-foreground"
-                />
-                <Label htmlFor={type.id} className="text-lg font-medium text-primary">
-                  {type.name}
-                </Label>
-              </div>
-              <Tooltip>
-                <TooltipTrigger>
-                  <HelpCircle className="h-5 w-5 text-accent" />
-                </TooltipTrigger>
-                <TooltipContent className="bg-primary text-primary-foreground">
-                  <p>{type.description}</p>
-                </TooltipContent>
-              </Tooltip>
-            </div>
-          ))}
-        </TooltipProvider>
-      </div>
-    )
   }
 
   return (
@@ -131,11 +131,44 @@ export default function SelectAnalysisPage({ params }: { params: { fileId: strin
             Транскрибация файла завершена. Выберите один или несколько видов анализа.
           </CardDescription>
         </CardHeader>
-        <CardContent>{renderContent()}</CardContent>
+        <CardContent>
+          {isLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="h-8 w-8 animate-spin text-secondary" />
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <TooltipProvider>
+                {analysisTypes.map((type) => (
+                  <div key={type.id} className="flex items-center justify-between rounded-lg bg-primary/5 p-4">
+                    <div className="flex items-center space-x-3">
+                      <Checkbox
+                        id={type.id}
+                        onCheckedChange={(checked) => handleSelectType(type.id, Boolean(checked))}
+                        className="border-accent data-[state=checked]:bg-accent data-[state=checked]:text-accent-foreground"
+                      />
+                      <Label htmlFor={type.id} className="text-lg font-medium text-primary">
+                        {type.name}
+                      </Label>
+                    </div>
+                    <Tooltip>
+                      <TooltipTrigger>
+                        <HelpCircle className="h-5 w-5 text-accent" />
+                      </TooltipTrigger>
+                      <TooltipContent className="bg-primary text-primary-foreground">
+                        <p>{type.description}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </div>
+                ))}
+              </TooltipProvider>
+            </div>
+          )}
+        </CardContent>
         <CardFooter>
           <Button
             onClick={handleStartAnalysis}
-            disabled={isLoading || isSubmitting || selectedTypes.size === 0 || !!error}
+            disabled={isLoading || isSubmitting || selectedTypes.size === 0}
             className="w-full bg-secondary text-secondary-foreground hover:bg-secondary/90"
           >
             {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
