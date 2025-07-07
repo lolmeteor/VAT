@@ -23,11 +23,11 @@ class Settings(BaseSettings):
     telegram_bot_token: str
     telegram_login_widget_bot_name: str = "VertexAIassistantBOT"
     
-    # S3 хранилище Reg.ru - ПРАВИЛЬНЫЙ БАКЕТ vatbucket
+    # S3 хранилище Reg.ru - ОБНОВЛЕННЫЕ ДАННЫЕ
     s3_endpoint_url: str = "https://s3.regru.cloud"
-    s3_access_key_id: str
-    s3_secret_access_key: str
-    s3_bucket_name: str = "vatbucket"  # ИСПРАВЛЕНО!
+    s3_access_key_id: str = "8TVU2GJ3DLFZVS5MUI3L"
+    s3_secret_access_key: str = "1ARu78H9fvqqDmDpDLJFVkVt0U5RQ1v8qlNdhpgb"
+    s3_bucket_name: str = "vatbucket"
     s3_region: str = "ru-central1"
     
     # Make.com вебхуки

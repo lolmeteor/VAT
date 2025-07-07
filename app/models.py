@@ -9,10 +9,10 @@ from app.database import Base
 import enum
 
 class AudioFileStatus(str, enum.Enum):
-    UPLOADING = "uploading"
-    UPLOADED = "uploaded"
-    PROCESSING_FAILED = "processing_failed"
-    DELETED = "deleted"
+    uploading = "uploading"
+    uploaded = "uploaded"
+    processing_failed = "processing_failed"
+    deleted = "deleted"
 
 class ProcessingStatus(str, enum.Enum):
     PENDING = "pending"
@@ -81,7 +81,7 @@ class AudioFile(Base):
     s3_link = Column(String(512), unique=True, nullable=False)
     file_size_bytes = Column(BigInteger, nullable=False)
     duration_seconds = Column(Integer, nullable=True)
-    status = Column(Enum(AudioFileStatus), nullable=False, default=AudioFileStatus.UPLOADING)
+    status = Column(Enum(AudioFileStatus), nullable=False, default=AudioFileStatus.uploading)
     error_message = Column(Text, nullable=True)
     created_at = Column(TIMESTAMP, nullable=False, server_default=func.current_timestamp())
     updated_at = Column(TIMESTAMP, nullable=False, server_default=func.current_timestamp(), onupdate=func.current_timestamp())

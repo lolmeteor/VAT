@@ -26,14 +26,21 @@ class S3Service:
         Загружает аудиофайл в S3 и возвращает file_id и URL
         """
         try:
+            logger.info(f"🔄 Начинаем загрузку файла: {original_filename} для пользователя: {user_id}")
+            logger.info(f"📊 Размер файла: {len(file_content)} байт")
+            logger.info(f"🔧 S3 настройки: endpoint={settings.s3_endpoint_url}, bucket={settings.s3_bucket_name}")
+            
             # Генерируем уникальный file_id
             file_id = str(uuid.uuid4())
+            logger.info(f"🆔 Сгенерирован file_id: {file_id}")
             
             # Определяем расширение файла
             file_extension = original_filename.split('.')[-1].lower() if '.' in original_filename else 'mp3'
+            logger.info(f"📁 Расширение файла: {file_extension}")
             
             # Формируем ключ файла в S3
             file_key = f"audio/{user_id}/{file_id}.{file_extension}"
+            logger.info(f"🔑 S3 ключ файла: {file_key}")
             
             # Определяем content type
             content_type_map = {
@@ -44,8 +51,10 @@ class S3Service:
                 'ogg': 'audio/ogg'
             }
             content_type = content_type_map.get(file_extension, 'audio/mpeg')
+            logger.info(f"📄 Content-Type: {content_type}")
             
             # Загружаем файл
+            logger.info("⬆️ Начинаем загрузку в S3...")
             self.client.put_object(
                 Bucket=self.bucket_name,
                 Key=file_key,
@@ -60,12 +69,17 @@ class S3Service:
             
             # Формируем URL файла
             file_url = f"{settings.s3_endpoint_url}/{self.bucket_name}/{file_key}"
-            logger.info(f"Аудиофайл успешно загружен: {file_url}")
+            logger.info(f"✅ Аудиофайл успешно загружен: {file_url}")
             
             return file_id, file_url
             
         except ClientError as e:
-            logger.error(f"Ошибка загрузки аудиофайла в S3: {e}")
+            logger.error(f"❌ Ошибка S3 ClientError: {e}")
+            logger.error(f"❌ Error code: {e.response.get('Error', {}).get('Code', 'Unknown')}")
+            logger.error(f"❌ Error message: {e.response.get('Error', {}).get('Message', 'Unknown')}")
+            raise Exception(f"Ошибка загрузки файла в S3: {str(e)}")
+        except Exception as e:
+            logger.error(f"❌ Неожиданная ошибка при загрузке в S3: {e}")
             raise Exception(f"Ошибка загрузки файла: {str(e)}")
 
     def upload_text_file(self, text_content: str, file_key: str) -> Optional[str]:
