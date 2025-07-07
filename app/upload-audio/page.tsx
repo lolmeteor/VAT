@@ -9,8 +9,9 @@ import { Progress } from "@/components/ui/progress"
 import { UploadCloud, FileCheck, AlertCircle } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useRouter } from "next/navigation"
+import WithHeaderLayout from "@/app/with-header-layout"
 
-export default function UploadAudioPage() {
+function UploadAudioContent() {
   const [file, setFile] = useState<File | null>(null)
   const [uploadProgress, setUploadProgress] = useState(0)
   const [uploadStatus, setUploadStatus] = useState<"idle" | "uploading" | "success" | "error">("idle")
@@ -165,5 +166,13 @@ export default function UploadAudioPage() {
         </CardFooter>
       </Card>
     </div>
+  )
+}
+
+export default function UploadAudioPage() {
+  return (
+    <WithHeaderLayout>
+      <UploadAudioContent />
+    </WithHeaderLayout>
   )
 }

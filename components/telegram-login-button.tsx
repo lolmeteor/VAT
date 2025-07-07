@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect } from "react"
+import { settings } from "@/app/config"
 
 interface TelegramUser {
   id: number
@@ -13,7 +14,6 @@ interface TelegramUser {
 }
 
 interface TelegramLoginButtonProps {
-  botUsername: string
   onAuth: (user: TelegramUser) => void
   buttonSize?: "large" | "medium" | "small"
   cornerRadius?: number
@@ -28,8 +28,7 @@ declare global {
   }
 }
 
-export default function TelegramLoginButton({
-  botUsername,
+export function TelegramLoginButton({
   onAuth,
   buttonSize = "large",
   cornerRadius = 10,
@@ -46,7 +45,7 @@ export default function TelegramLoginButton({
     // Создаем скрипт для загрузки Telegram Widget
     const script = document.createElement("script")
     script.src = "https://telegram.org/js/telegram-widget.js?22"
-    script.setAttribute("data-telegram-login", botUsername)
+    script.setAttribute("data-telegram-login", settings.telegramBotName)
     script.setAttribute("data-size", buttonSize)
     script.setAttribute("data-corner-radius", cornerRadius.toString())
     script.setAttribute("data-request-access", requestAccess ? "write" : "")
@@ -64,7 +63,7 @@ export default function TelegramLoginButton({
         container.innerHTML = ""
       }
     }
-  }, [botUsername, buttonSize, cornerRadius, requestAccess, onAuth])
+  }, [buttonSize, cornerRadius, requestAccess, onAuth])
 
   return (
     <div className="flex flex-col items-center space-y-4">

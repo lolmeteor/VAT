@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Loader2, Check } from "lucide-react"
+import WithHeaderLayout from "@/app/with-header-layout"
 
 interface Tariff {
   id: string
@@ -12,11 +13,10 @@ interface Tariff {
   description: string
   price: number
   minutes: number
-  features: string[]
   is_popular?: boolean
 }
 
-export default function TariffsPage() {
+function TariffsContent() {
   const [tariffs, setTariffs] = useState<Tariff[]>([])
   const [loading, setLoading] = useState(true)
   const [purchasing, setPurchasing] = useState<string | null>(null)
@@ -30,7 +30,7 @@ export default function TariffsPage() {
 
         if (response.ok) {
           const data = await response.json()
-          setTariffs(data.tariffs || [])
+          setTariffs(data.data?.tariffs || [])
         }
       } catch (error) {
         console.error("Ошибка загрузки тарифов:", error)
@@ -86,7 +86,7 @@ export default function TariffsPage() {
         <p className="text-muted-foreground">Выберите подходящий тариф для анализа ваших аудиозаписей</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {tariffs.map((tariff) => (
           <Card key={tariff.id} className={`relative ${tariff.is_popular ? "border-primary" : ""}`}>
             {tariff.is_popular && (
@@ -102,17 +102,23 @@ export default function TariffsPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <ul className="space-y-2">
-                {tariff.features.map((feature, index) => (
-                  <li key={index} className="flex items-center">
-                    <Check className="h-4 w-4 text-green-500 mr-2" />
-                    <span className="text-sm">{feature}</span>
-                  </li>
-                ))}
+                <li className="flex items-center">
+                  <Check className="h-4 w-4 text-green-500 mr-2" />
+                  <span className="text-sm">{tariff.minutes} минут анализа</span>
+                </li>
+                <li className="flex items-center">
+                  <Check className="h-4 w-4 text-green-500 mr-2" />
+                  <span className="text-sm">Все типы анализа</span>
+                </li>
+                <li className="flex items-center">
+                  <Check className="h-4 w-4 text-green-500 mr-2" />
+                  <span className="text-sm">Экспорт в DOCX</span>
+                </li>
               </ul>
               <Button
                 className="w-full"
                 onClick={() => handlePurchase(tariff.id)}
-                disabled={purchasing === tariff.id}
+                disabled={purchasing === tariff.id || tariff.price === 0}
                 variant={tariff.is_popular ? "default" : "outline"}
               >
                 {purchasing === tariff.id ? (
@@ -120,6 +126,8 @@ export default function TariffsPage() {
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     Обработка...
                   </>
+                ) : tariff.price === 0 ? (
+                  "Бесплатно"
                 ) : (
                   "Купить"
                 )}
@@ -129,5 +137,13 @@ export default function TariffsPage() {
         ))}
       </div>
     </div>
+  )
+}
+
+export default function TariffsPage() {
+  return (
+    <WithHeaderLayout>
+      <TariffsContent />
+    </WithHeaderLayout>
   )
 }

@@ -8,6 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Loader2 } from "lucide-react"
+import WithHeaderLayout from "@/app/with-header-layout"
 
 interface AnalysisPageProps {
   params: { fileId: string }
@@ -32,7 +33,7 @@ const analysisTypes = [
   { id: "speaker2_negative", label: "Негативные моменты спикера 2", description: "Выявление проблемных аспектов" },
 ]
 
-export default function AnalysisPage({ params }: AnalysisPageProps) {
+function AnalysisContent({ params }: AnalysisPageProps) {
   const [selectedTypes, setSelectedTypes] = useState<Set<string>>(new Set())
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -187,5 +188,13 @@ export default function AnalysisPage({ params }: AnalysisPageProps) {
         </CardContent>
       </Card>
     </div>
+  )
+}
+
+export default function AnalysisPage({ params }: AnalysisPageProps) {
+  return (
+    <WithHeaderLayout>
+      <AnalysisContent params={params} />
+    </WithHeaderLayout>
   )
 }

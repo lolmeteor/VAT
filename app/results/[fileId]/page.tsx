@@ -5,7 +5,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Loader2, Download, FileText, Eye, RefreshCw } from "lucide-react"
+import { Loader2, Download, FileText, RefreshCw } from "lucide-react"
+import WithHeaderLayout from "@/app/with-header-layout"
 
 interface Analysis {
   analysis_id: string
@@ -37,7 +38,7 @@ interface Transcription {
   s3_link_text?: string
 }
 
-export default function ResultsPage({ params }: { params: { fileId: string } }) {
+function ResultsContent({ params }: { params: { fileId: string } }) {
   const [fileInfo, setFileInfo] = useState<FileInfo | null>(null)
   const [transcription, setTranscription] = useState<Transcription | null>(null)
   const [analyses, setAnalyses] = useState<Analysis[]>([])
@@ -64,16 +65,16 @@ export default function ResultsPage({ params }: { params: { fileId: string } }) 
       if (transcriptionResponse.ok) {
         const transcriptionData = await transcriptionResponse.json()
         setTranscription(transcriptionData)
-      }
 
-      // Загружаем анализы
-      const analysesResponse = await fetch(`/api/files/${params.fileId}/analyses`, {
-        credentials: "include",
-      })
+        // Загружаем анализы для этой транскрипции
+        const analysesResponse = await fetch(`/api/analyses/transcription/${transcriptionData.transcription_id}`, {
+          credentials: "include",
+        })
 
-      if (analysesResponse.ok) {
-        const analysesData = await analysesResponse.json()
-        setAnalyses(analysesData.analyses || [])
+        if (analysesResponse.ok) {
+          const analysesData = await analysesResponse.json()
+          setAnalyses(analysesData || [])
+        }
       }
     } catch (error) {
       console.error("Ошибка загрузки данных:", error)
@@ -202,24 +203,18 @@ export default function ResultsPage({ params }: { params: { fileId: string } }) 
                       </div>
                     )}
 
-                    {analysis.status === "completed" && (analysis.s3_docx_link || analysis.s3_pdf_link) && (
+                    {analysis.status === "completed" && (
                       <div className="flex space-x-2">
-                        {analysis.s3_docx_link && (
-                          <Button size="sm" variant="outline" asChild>
-                            <a href={analysis.s3_docx_link} target="_blank" rel="noopener noreferrer">
-                              <Download className="mr-2 h-4 w-4" />
-                              DOCX
-                            </a>
-                          </Button>
-                        )}
-                        {analysis.s3_pdf_link && (
-                          <Button size="sm" variant="outline" asChild>
-                            <a href={analysis.s3_pdf_link} target="_blank" rel="noopener noreferrer">
-                              <Eye className="mr-2 h-4 w-4" />
-                              PDF
-                            </a>
-                          </Button>
-                        )}
+                        <Button size="sm" variant="outline" asChild>
+                          <a
+                            href={`/api/analyses/${analysis.analysis_id}/download/docx`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            <Download className="mr-2 h-4 w-4" />
+                            DOCX
+                          </a>
+                        </Button>
                       </div>
                     )}
                   </CardContent>
@@ -253,14 +248,28 @@ export default function ResultsPage({ params }: { params: { fileId: string } }) 
                   <div className="p-4 bg-muted rounded-lg">
                     <pre className="whitespace-pre-wrap text-sm">{transcription.transcription_text}</pre>
                   </div>
-                  {transcription.s3_link_text && (
+                  <div className="flex space-x-2">
                     <Button variant="outline" asChild>
-                      <a href={transcription.s3_link_text} target="_blank" rel="noopener noreferrer">
+                      <a
+                        href={`/api/files/${params.fileId}/transcription/download/txt`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
                         <FileText className="mr-2 h-4 w-4" />
-                        Скачать текст
+                        TXT
                       </a>
                     </Button>
-                  )}
+                    <Button variant="outline" asChild>
+                      <a
+                        href={`/api/files/${params.fileId}/transcription/download/docx`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        <Download className="mr-2 h-4 w-4" />
+                        DOCX
+                      </a>
+                    </Button>
+                  </div>
                 </div>
               ) : (
                 <p className="text-muted-foreground">
@@ -311,5 +320,13 @@ export default function ResultsPage({ params }: { params: { fileId: string } }) 
         </TabsContent>
       </Tabs>
     </div>
+  )
+}
+
+export default function ResultsPage({ params }: { params: { fileId: string } }) {
+  return (
+    <WithHeaderLayout>
+      <ResultsContent params={params} />
+    </WithHeaderLayout>
   )
 }
