@@ -1,76 +1,75 @@
 "use client"
 
-import { useEffect, useRef } from "react"
-import { settings } from "@/app/config" // Frontend-конфиг
+import { useEffect } from "react"
+
+interface TelegramUser {
+  id: number
+  first_name: string
+  last_name?: string
+  username?: string
+  photo_url?: string
+  auth_date: number
+  hash: string
+}
 
 interface TelegramLoginButtonProps {
-  onAuth: (data: any) => void // Тип данных от Telegram нужно будет уточнить
+  botUsername: string
+  onAuth: (user: TelegramUser) => void
   buttonSize?: "large" | "medium" | "small"
   cornerRadius?: number
-  requestAccess?: "write" // или другие значения, если нужны
-  showUserPhoto?: boolean
+  requestAccess?: boolean
 }
 
 declare global {
   interface Window {
-    Telegram: {
-      Login: {
-        auth: (options: { bot_id: string; request_access?: string }, callback: (dataOrFalse: any) => void) => void
-      }
+    TelegramLoginWidget: {
+      dataOnauth: (user: TelegramUser) => void
     }
-    onTelegramAuth: (data: any) => void
   }
 }
 
-export function TelegramLoginButton({
+export default function TelegramLoginButton({
+  botUsername,
   onAuth,
   buttonSize = "large",
-  cornerRadius,
-  requestAccess,
-  showUserPhoto = true,
+  cornerRadius = 10,
+  requestAccess = true,
 }: TelegramLoginButtonProps) {
-  const ref = useRef<HTMLDivElement>(null)
-
   useEffect(() => {
-    if (!ref.current) return
-
-    console.log("Telegram bot name:", settings.telegramBotName) // Отладка
-
-    // Делаем функцию onAuth доступной глобально
-    window.onTelegramAuth = (data: any) => {
-      console.log("Telegram auth data:", data) // Отладка
-      if (data) {
-        onAuth(data)
-      } else {
-        console.warn("Telegram authentication failed or was cancelled.")
-      }
+    // Устанавливаем глобальный обработчик для Telegram Widget
+    window.TelegramLoginWidget = {
+      dataOnauth: (user: TelegramUser) => {
+        onAuth(user)
+      },
     }
 
+    // Создаем скрипт для загрузки Telegram Widget
     const script = document.createElement("script")
     script.src = "https://telegram.org/js/telegram-widget.js?22"
-    script.async = true
-    script.setAttribute("data-telegram-login", settings.telegramBotName)
+    script.setAttribute("data-telegram-login", botUsername)
     script.setAttribute("data-size", buttonSize)
-    if (cornerRadius !== undefined) {
-      script.setAttribute("data-radius", cornerRadius.toString())
-    }
-    if (requestAccess) {
-      script.setAttribute("data-request-access", requestAccess)
-    }
-    script.setAttribute("data-userpic", showUserPhoto ? "true" : "false")
-    script.setAttribute("data-onauth", "onTelegramAuth(user)")
+    script.setAttribute("data-corner-radius", cornerRadius.toString())
+    script.setAttribute("data-request-access", requestAccess ? "write" : "")
+    script.setAttribute("data-onauth", "TelegramLoginWidget.dataOnauth(user)")
+    script.async = true
 
-    console.log("Loading Telegram widget with bot:", settings.telegramBotName) // Отладка
-
-    ref.current.appendChild(script)
+    const container = document.getElementById("telegram-login-container")
+    if (container) {
+      container.appendChild(script)
+    }
 
     return () => {
-      if (ref.current && ref.current.contains(script)) {
-        ref.current.removeChild(script)
+      // Очищаем контейнер при размонтировании
+      if (container) {
+        container.innerHTML = ""
       }
-      delete window.onTelegramAuth
     }
-  }, [settings.telegramBotName, buttonSize, cornerRadius, requestAccess, showUserPhoto, onAuth])
+  }, [botUsername, buttonSize, cornerRadius, requestAccess, onAuth])
 
-  return <div ref={ref} />
+  return (
+    <div className="flex flex-col items-center space-y-4">
+      <div id="telegram-login-container" />
+      <p className="text-sm text-muted-foreground text-center">Войдите через Telegram для доступа к сервису</p>
+    </div>
+  )
 }

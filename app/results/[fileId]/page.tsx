@@ -1,79 +1,315 @@
 "use client"
 
-import { CardFooter } from "@/components/ui/card"
-
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Download, FileText, RefreshCw, Upload, Loader2 } from "lucide-react"
-import { useRouter } from "next/navigation"
+import { Badge } from "@/components/ui/badge"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Loader2, Download, FileText, Eye, RefreshCw } from "lucide-react"
 
-// TODO: Заменить на данные с API /api/analyses/transcription/{transcriptionId}
-const analysisResults = [
-  { id: "1", name: "Структурный анализ", status: "completed", docx_link: "#" },
-  { id: "2", name: "Анализ участников", status: "completed", docx_link: "#" },
-  { id: "3", name: "Анализ тональности", status: "processing" },
-]
+interface Analysis {
+  analysis_id: string
+  analysis_type: string
+  status: string
+  s3_docx_link?: string
+  s3_pdf_link?: string
+  analysis_summary?: string
+  key_points?: any[]
+  error_message?: string
+  created_at: string
+  updated_at: string
+}
+
+interface FileInfo {
+  file_id: string
+  original_file_name: string
+  duration_seconds?: number
+  status: string
+  created_at: string
+}
+
+interface Transcription {
+  transcription_id: string
+  transcription_text?: string
+  speakers_count?: number
+  language_detected?: string
+  status: string
+  s3_link_text?: string
+}
 
 export default function ResultsPage({ params }: { params: { fileId: string } }) {
-  const router = useRouter()
+  const [fileInfo, setFileInfo] = useState<FileInfo | null>(null)
+  const [transcription, setTranscription] = useState<Transcription | null>(null)
+  const [analyses, setAnalyses] = useState<Analysis[]>([])
+  const [loading, setLoading] = useState(true)
+  const [refreshing, setRefreshing] = useState(false)
 
-  const handleDownload = (link: string) => {
-    // TODO: Реализовать скачивание
-    alert(`Скачивание по ссылке: ${link}`)
+  const fetchData = async () => {
+    try {
+      // Загружаем информацию о файле
+      const fileResponse = await fetch(`/api/files/${params.fileId}`, {
+        credentials: "include",
+      })
+
+      if (fileResponse.ok) {
+        const fileData = await fileResponse.json()
+        setFileInfo(fileData)
+      }
+
+      // Загружаем транскрипцию
+      const transcriptionResponse = await fetch(`/api/files/${params.fileId}/transcription`, {
+        credentials: "include",
+      })
+
+      if (transcriptionResponse.ok) {
+        const transcriptionData = await transcriptionResponse.json()
+        setTranscription(transcriptionData)
+      }
+
+      // Загружаем анализы
+      const analysesResponse = await fetch(`/api/files/${params.fileId}/analyses`, {
+        credentials: "include",
+      })
+
+      if (analysesResponse.ok) {
+        const analysesData = await analysesResponse.json()
+        setAnalyses(analysesData.analyses || [])
+      }
+    } catch (error) {
+      console.error("Ошибка загрузки данных:", error)
+    } finally {
+      setLoading(false)
+      setRefreshing(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchData()
+  }, [params.fileId])
+
+  const handleRefresh = () => {
+    setRefreshing(true)
+    fetchData()
+  }
+
+  const getStatusBadge = (status: string) => {
+    const statusMap = {
+      pending: { label: "Ожидает", variant: "secondary" as const },
+      processing: { label: "Обработка", variant: "default" as const },
+      completed: { label: "Готово", variant: "default" as const },
+      failed: { label: "Ошибка", variant: "destructive" as const },
+    }
+    return statusMap[status as keyof typeof statusMap] || { label: status, variant: "secondary" as const }
+  }
+
+  const getAnalysisTypeName = (type: string) => {
+    const typeMap: { [key: string]: string } = {
+      kp: "Ключевые пункты",
+      first_meeting: "Первая встреча",
+      follow_up_meeting: "Повторная встреча",
+      protocol: "Протокол",
+      speaker1_psycho: "Психотип спикера 1",
+      speaker1_negative: "Негатив спикера 1",
+      speaker2_psycho: "Психотип спикера 2",
+      speaker2_negative: "Негатив спикера 2",
+    }
+    return typeMap[type] || type
+  }
+
+  if (loading) {
+    return (
+      <div className="container mx-auto py-8">
+        <div className="flex items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin" />
+          <span className="ml-2">Загрузка результатов...</span>
+        </div>
+      </div>
+    )
   }
 
   return (
-    <div className="container mx-auto max-w-2xl py-10">
-      <Card className="bg-muted text-muted-foreground shadow-lg">
-        <CardHeader className="text-center">
-          <FileText className="mx-auto h-12 w-12 text-secondary" />
-          <CardTitle className="mt-4 text-2xl font-bold text-primary">Результат анализа</CardTitle>
-          <CardDescription className="text-primary/80">
-            Анализ завершен: {new Date().toLocaleDateString("ru-RU")}
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {analysisResults.map((result) => (
-            <div key={result.id} className="flex items-center justify-between rounded-lg bg-primary/5 p-4">
-              <div>
-                <p className="font-semibold text-primary">{result.name}</p>
-                <p className={`text-sm ${result.status === "completed" ? "text-green-600" : "text-yellow-600"}`}>
-                  {result.status === "completed" ? "Результаты готовы к скачиванию" : "В обработке..."}
-                </p>
-              </div>
-              {result.status === "completed" && result.docx_link && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleDownload(result.docx_link)}
-                  className="border-accent bg-transparent text-accent-foreground hover:bg-accent hover:text-accent-foreground"
-                >
-                  <Download className="mr-2 h-4 w-4" />
-                  Скачать .docx
-                </Button>
+    <div className="container mx-auto py-8 px-4">
+      <div className="flex items-center justify-between mb-8">
+        <div>
+          <h1 className="text-3xl font-bold mb-2">Результаты анализа</h1>
+          <p className="text-muted-foreground">{fileInfo?.original_file_name || `Файл ${params.fileId}`}</p>
+        </div>
+        <Button onClick={handleRefresh} disabled={refreshing} variant="outline">
+          <RefreshCw className={`mr-2 h-4 w-4 ${refreshing ? "animate-spin" : ""}`} />
+          Обновить
+        </Button>
+      </div>
+
+      <Tabs defaultValue="analyses" className="space-y-6">
+        <TabsList>
+          <TabsTrigger value="analyses">Анализы</TabsTrigger>
+          <TabsTrigger value="transcription">Транскрипция</TabsTrigger>
+          <TabsTrigger value="file-info">Информация о файле</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="analyses">
+          <div className="space-y-4">
+            {analyses.length === 0 ? (
+              <Card>
+                <CardContent className="text-center py-8">
+                  <p className="text-muted-foreground">Анализы не найдены</p>
+                  <Button className="mt-4" onClick={() => (window.location.href = `/analysis/${params.fileId}`)}>
+                    Запустить анализ
+                  </Button>
+                </CardContent>
+              </Card>
+            ) : (
+              analyses.map((analysis) => (
+                <Card key={analysis.analysis_id}>
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-lg">{getAnalysisTypeName(analysis.analysis_type)}</CardTitle>
+                      <Badge variant={getStatusBadge(analysis.status).variant}>
+                        {getStatusBadge(analysis.status).label}
+                      </Badge>
+                    </div>
+                    <CardDescription>
+                      Создан: {new Date(analysis.created_at).toLocaleString("ru-RU")}
+                      {analysis.updated_at !== analysis.created_at && (
+                        <> • Обновлен: {new Date(analysis.updated_at).toLocaleString("ru-RU")}</>
+                      )}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {analysis.status === "failed" && analysis.error_message && (
+                      <div className="p-4 bg-destructive/10 border border-destructive/20 rounded-lg">
+                        <p className="text-sm text-destructive">{analysis.error_message}</p>
+                      </div>
+                    )}
+
+                    {analysis.analysis_summary && (
+                      <div>
+                        <h4 className="font-medium mb-2">Краткое содержание:</h4>
+                        <p className="text-sm text-muted-foreground">{analysis.analysis_summary}</p>
+                      </div>
+                    )}
+
+                    {analysis.key_points && analysis.key_points.length > 0 && (
+                      <div>
+                        <h4 className="font-medium mb-2">Ключевые моменты:</h4>
+                        <ul className="list-disc list-inside space-y-1">
+                          {analysis.key_points.map((point, index) => (
+                            <li key={index} className="text-sm text-muted-foreground">
+                              {typeof point === "string" ? point : JSON.stringify(point)}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
+                    {analysis.status === "completed" && (analysis.s3_docx_link || analysis.s3_pdf_link) && (
+                      <div className="flex space-x-2">
+                        {analysis.s3_docx_link && (
+                          <Button size="sm" variant="outline" asChild>
+                            <a href={analysis.s3_docx_link} target="_blank" rel="noopener noreferrer">
+                              <Download className="mr-2 h-4 w-4" />
+                              DOCX
+                            </a>
+                          </Button>
+                        )}
+                        {analysis.s3_pdf_link && (
+                          <Button size="sm" variant="outline" asChild>
+                            <a href={analysis.s3_pdf_link} target="_blank" rel="noopener noreferrer">
+                              <Eye className="mr-2 h-4 w-4" />
+                              PDF
+                            </a>
+                          </Button>
+                        )}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              ))
+            )}
+          </div>
+        </TabsContent>
+
+        <TabsContent value="transcription">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between">
+                <span>Транскрипция</span>
+                {transcription && (
+                  <Badge variant={getStatusBadge(transcription.status).variant}>
+                    {getStatusBadge(transcription.status).label}
+                  </Badge>
+                )}
+              </CardTitle>
+              {transcription && (
+                <CardDescription>
+                  {transcription.speakers_count && <>Количество спикеров: {transcription.speakers_count} • </>}
+                  {transcription.language_detected && <>Язык: {transcription.language_detected}</>}
+                </CardDescription>
               )}
-              {result.status === "processing" && <Loader2 className="h-5 w-5 animate-spin text-accent" />}
-            </div>
-          ))}
-        </CardContent>
-        <CardFooter className="grid grid-cols-1 gap-2 md:grid-cols-2">
-          <Button
-            variant="outline"
-            onClick={() => router.push(`/analysis/${params.fileId}`)}
-            className="border-accent bg-transparent text-accent-foreground hover:bg-accent hover:text-accent-foreground"
-          >
-            <RefreshCw className="mr-2 h-4 w-4" />
-            Выбрать другой анализ
-          </Button>
-          <Button
-            onClick={() => router.push("/upload-audio")}
-            className="bg-secondary text-secondary-foreground hover:bg-secondary/90"
-          >
-            <Upload className="mr-2 h-4 w-4" />
-            Загрузить новый файл
-          </Button>
-        </CardFooter>
-      </Card>
+            </CardHeader>
+            <CardContent>
+              {transcription?.transcription_text ? (
+                <div className="space-y-4">
+                  <div className="p-4 bg-muted rounded-lg">
+                    <pre className="whitespace-pre-wrap text-sm">{transcription.transcription_text}</pre>
+                  </div>
+                  {transcription.s3_link_text && (
+                    <Button variant="outline" asChild>
+                      <a href={transcription.s3_link_text} target="_blank" rel="noopener noreferrer">
+                        <FileText className="mr-2 h-4 w-4" />
+                        Скачать текст
+                      </a>
+                    </Button>
+                  )}
+                </div>
+              ) : (
+                <p className="text-muted-foreground">
+                  {transcription?.status === "pending" || transcription?.status === "processing"
+                    ? "Транскрипция в процессе обработки..."
+                    : "Транскрипция недоступна"}
+                </p>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="file-info">
+          <Card>
+            <CardHeader>
+              <CardTitle>Информация о файле</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {fileInfo && (
+                <div className="space-y-4">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Название файла</p>
+                    <p className="font-medium">{fileInfo.original_file_name}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Статус</p>
+                    <Badge variant={getStatusBadge(fileInfo.status).variant}>
+                      {getStatusBadge(fileInfo.status).label}
+                    </Badge>
+                  </div>
+                  {fileInfo.duration_seconds && (
+                    <div>
+                      <p className="text-sm text-muted-foreground">Длительность</p>
+                      <p className="font-medium">
+                        {Math.floor(fileInfo.duration_seconds / 60)}:
+                        {(fileInfo.duration_seconds % 60).toString().padStart(2, "0")}
+                      </p>
+                    </div>
+                  )}
+                  <div>
+                    <p className="text-sm text-muted-foreground">Дата загрузки</p>
+                    <p className="font-medium">{new Date(fileInfo.created_at).toLocaleString("ru-RU")}</p>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   )
 }

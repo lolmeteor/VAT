@@ -7,6 +7,7 @@ import { CORSMiddleware } from "fastapi.middleware.cors"
 import { JSONResponse } from "fastapi.responses"
 import { asynccontextmanager } from "contextlib"
 import uvicorn from "uvicorn"
+import logging from "logging"
 
 import { settings } from "app.config"
 import { engine, Base } from "app.database"
@@ -102,70 +103,87 @@ const AnalysisPage = ({ params }: { params: { fileId: string } }) => {
   )
 }
 
-// FastAPI application setup
-const app = FastAPI({
-  title: "VAT - Voice Analysis Tool",
-  description: "Сервис транскрибации и анализа аудиофайлов",
-  version: "1.0.0",
-})
+// ──────────────────────────── Логирование ──────────────────────────────
+logging.basicConfig(level=logging.INFO, format="%(levelname)s | %(name)s | %(message)s")
+logger = logging.getLogger(__name__)
 
-// CORS middleware setup
-const origins = [
-  "https://www.vertexassistant.ru",
-  "https://www.vertexassistant.ru:443",
-  "https://vertexassistant.ru",
-  "https://vertexassistant.ru:443"
-]
-
-app.add_middleware(
-  CORSMiddleware,
-  {
-    allow_origins: origins,
-    allow_credentials: true,
-    allow_methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allow_headers: ["*"],
-  }
-)
-
-// Include routers
-app.include_router(auth.router, { prefix: "/api" })
-app.include_router(files.router, { prefix: "/api" })
-app.include_router(analyses.router, { prefix: "/api" })
-app.include_router(webhooks.router, { prefix: "/api" })
-app.include_router(user.router, { prefix: "/api" })
-app.include_router(common.router, { prefix: "/api" })
-
-// Global exception handler
-app.exception_handler(Exception)((request: Request, exc: Exception) => {
-  console.error(`Глобальная ошибка: ${exc}`)
-  return JSONResponse({
-    status_code: 500,
-    content: {
-      success: false,
-      message: "Внутренняя ошибка сервера",
-      detail: "Произошла непредвиденная ошибка. Обратитесь в поддержку."
-    }
-  })
-})
-
-// Lifespan context manager
+// ──────────────────────── Lifespan (startup/shutdown) ───────────────────
 const lifespan = async (app: FastAPI) => {
-  // Startup
-  console.log("Запуск приложения VAT...")
-  Base.metadata.create_all(bind=engine)
-  yield
-  // Shutdown
-  console.log("Остановка приложения VAT...")
+    """Создаём/обновляем структуру БД при запуске сервера."""
+    logger.info("Запуск VAT backend… создаём таблицы, если их нет…")
+    Base.metadata.create_all(bind=engine)  // если используете Alembic, удалите
+    yield
+    logger.info("Остановка VAT backend…")
 }
 
-// Run the FastAPI application
+// ─────────────────────────────── App ────────────────────────────────────
+const app = FastAPI(
+    title="VAT – Voice Analysis Tool",
+    description="Сервис транскрибации и анализа аудиофайлов",
+    version="1.0.0",
+    lifespan=lifespan,
+)
+
+// ─────────────────────────────── CORS ───────────────────────────────────
+const origins: string[] = (
+    settings.cors_allowed_origins.split(",")
+    if settings.cors_allowed_origins !== "*"
+    else ["*"]
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=true,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+// ──────────────────────────── Роутеры API ───────────────────────────────
+for (const router of [common, auth, user, files, analyses, webhooks]) {
+    app.include_router(router.router, { prefix: "/api" })
+}
+
+// ─────────────────────── Глобальный обработчик ошибок ──────────────────
+app.exception_handler(Exception)((request: Request, exc: Exception) => {
+    logger.error(`Глобальная ошибка: ${exc}`, exc_info=true)
+    return JSONResponse({
+        status_code: 500,
+        content: {
+            success: false,
+            message: "Внутренняя ошибка сервера",
+            detail: settings.app_env === "development" ? exc.toString() : "Обратитесь в поддержку",
+        }
+    })
+})
+
+// ─────────────────────────── Служебные эндпоинты ────────────────────────
+app.get("/") = async (request: Request) => {
+    return {
+        success: true,
+        message: "VAT API работает",
+        version: "1.0.0",
+        environment: settings.app_env
+    }
+}
+
+app.get("/health") = async (request: Request) => {
+    return {
+        status: "healthy",
+        service: "VAT API",
+        timestamp: new Date().toISOString() + "Z",
+    }
+}
+
+// ─────────────────────────────── main ───────────────────────────────────
 if (require.main === module) {
-  uvicorn.run({
-    app: "main:app",
-    host: "127.0.0.1",
-    port: 8000,
-    reload: false
-  })
+    uvicorn.run({
+        app: "main:app",
+        host: "0.0.0.0",
+        port: 8000,
+        reload: settings.app_env === "development",
+        log_level: "info"
+    })
 }
 
 export default AnalysisPage

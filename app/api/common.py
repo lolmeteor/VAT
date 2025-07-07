@@ -1,16 +1,22 @@
 """
-API эндпоинты для общих запросов (health check, root)
+Общие API эндпоинты
 """
 from fastapi import APIRouter
+from datetime import datetime
 
 router = APIRouter()
 
 @router.get("/health")
 async def health_check():
     """
-    Проверка состояния сервиса
+    Проверка состояния API
     """
-    return {"status": "healthy"}
+    return {
+        "status": "healthy",
+        "service": "VAT API",
+        "timestamp": datetime.utcnow().isoformat() + "Z",
+        "version": "1.0.0"
+    }
 
 @router.get("/")
 async def root():
@@ -21,5 +27,5 @@ async def root():
         "success": True,
         "message": "VAT API работает",
         "version": "1.0.0",
-        "environment": "production"
+        "docs": "/docs"
     }

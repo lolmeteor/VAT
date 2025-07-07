@@ -1,87 +1,87 @@
 """
-Сервис для отправки вебхуков в Make.com
+Сервис для отправки webhook'ов в Make.com
 """
 import httpx
-import asyncio
+import logging
 from typing import Dict, Any, Optional
 from app.config import settings
-from app.models import AnalysisType
+
+logger = logging.getLogger(__name__)
 
 class MakeWebhookService:
     def __init__(self):
-        self.transcription_webhook_url = settings.make_transcription_webhook_url
-        self.analysis_webhooks = settings.make_analysis_webhooks
-    
-    async def send_transcription_webhook(self, file_id: str, s3_url: str, user_id: str) -> bool:
+        self.webhook_url = settings.make_webhook_url
+        self.timeout = 30.0
+
+    async def send_webhook(self, data: Dict[str, Any]) -> bool:
         """
-        Отправляет вебхук для запуска транскрибации
+        Отправляет данные в Make.com webhook
         """
-        payload = {
-            "file_id": file_id,
-            "s3_url": s3_url,
-            "user_id": user_id,
-            "action": "transcribe"
-        }
-        
-        return await self._send_webhook(self.transcription_webhook_url, payload)
-    
-    async def send_analysis_webhook(self, analysis_type: AnalysisType, transcription_id: str, 
-                                  transcription_s3_url: str, analysis_id: str) -> bool:
-        """
-        Отправляет вебхук для запуска конкретного типа анализа
-        """
-        webhook_url = self.analysis_webhooks.get(analysis_type.value)
-        if not webhook_url:
-            raise ValueError(f"Webhook URL не найден для типа анализа: {analysis_type.value}")
-        
-        payload = {
-            "analysis_id": analysis_id,
-            "transcription_id": transcription_id,
-            "transcription_s3_url": transcription_s3_url,
-            "analysis_type": analysis_type.value,
-            "action": "analyze"
-        }
-        
-        return await self._send_webhook(webhook_url, payload)
-    
-    async def _send_webhook(self, url: str, payload: Dict[str, Any]) -> bool:
-        """
-        Отправляет HTTP POST запрос на указанный webhook URL
-        """
+        if not self.webhook_url:
+            logger.warning("Make webhook URL не настроен")
+            return False
+
         try:
-            async with httpx.AsyncClient(timeout=30.0) as client:
+            async with httpx.AsyncClient(timeout=self.timeout) as client:
                 response = await client.post(
-                    url,
-                    json=payload,
+                    self.webhook_url,
+                    json=data,
                     headers={"Content-Type": "application/json"}
                 )
                 
-                # Make.com обычно возвращает 200 при успешном получении webhook
                 if response.status_code == 200:
+                    logger.info(f"Webhook успешно отправлен в Make.com: {data.get('event_type', 'unknown')}")
                     return True
                 else:
-                    print(f"Webhook failed with status {response.status_code}: {response.text}")
+                    logger.error(f"Ошибка отправки webhook в Make.com: {response.status_code} - {response.text}")
                     return False
                     
-        except Exception as e:
-            print(f"Ошибка отправки webhook: {str(e)}")
+        except httpx.TimeoutException:
+            logger.error("Таймаут при отправке webhook в Make.com")
             return False
-    
-    def get_analysis_display_names(self) -> Dict[str, str]:
+        except Exception as e:
+            logger.error(f"Неожиданная ошибка при отправке webhook в Make.com: {e}")
+            return False
+
+    async def send_analysis_started(self, file_id: str, analysis_types: list, user_id: str) -> bool:
         """
-        Возвращает человекочитаемые названия типов анализа для интерфейса
+        Отправляет уведомление о начале анализа
         """
-        return {
-            "kp": "КП",
-            "first_meeting": "Первая встреча",
-            "follow_up_meeting": "Повторная встреча", 
-            "protocol": "Протокол",
-            "speaker1_psycho": "Анализ Спикер 1 (психологический)",
-            "speaker1_negative": "Анализ Спикер 1 (негативные факторы)",
-            "speaker2_psycho": "Анализ Спикер 2 (психологический)",
-            "speaker2_negative": "Анализ Спикер 2 (негативные факторы)",
-            "speaker3_psycho": "Анализ Спикер 3 (психологический)",
-            "speaker3_negative": "Анализ Спикер 3 (негативные факторы)",
-            "speaker4_psycho": "Анализ Спикер 4 (психологический)",
-            "speaker4_negative": "Анализ Спикер 4 (негативные факторы)"
+        data = {
+            "event_type": "analysis_started",
+            "file_id": file_id,
+            "user_id": user_id,
+            "analysis_types": analysis_types,
+            "timestamp": "2025-01-16T12:00:00Z"
         }
+        return await self.send_webhook(data)
+
+    async def send_analysis_completed(self, file_id: str, analysis_id: str, analysis_type: str, result_urls: Dict[str, str]) -> bool:
+        """
+        Отправляет уведомление о завершении анализа
+        """
+        data = {
+            "event_type": "analysis_completed",
+            "file_id": file_id,
+            "analysis_id": analysis_id,
+            "analysis_type": analysis_type,
+            "result_urls": result_urls,
+            "timestamp": "2025-01-16T12:00:00Z"
+        }
+        return await self.send_webhook(data)
+
+    async def send_transcription_completed(self, file_id: str, transcription_id: str, transcription_url: str) -> bool:
+        """
+        Отправляет уведомление о завершении транскрипции
+        """
+        data = {
+            "event_type": "transcription_completed",
+            "file_id": file_id,
+            "transcription_id": transcription_id,
+            "transcription_url": transcription_url,
+            "timestamp": "2025-01-16T12:00:00Z"
+        }
+        return await self.send_webhook(data)
+
+# Глобальный экземпляр сервиса
+make_webhook_service = MakeWebhookService()
