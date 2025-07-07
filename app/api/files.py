@@ -72,7 +72,7 @@ async def upload_audio_file(
             original_file_name=file.filename,
             s3_link=s3_url,
             file_size_bytes=len(file_content),
-            status=AudioFileStatus.UPLOADED
+            status=AudioFileStatus.uploaded  # ИСПРАВЛЕНО: используем lowercase
         )
         
         db.add(audio_file)
