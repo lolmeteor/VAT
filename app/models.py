@@ -50,7 +50,6 @@ class User(Base):
     balance_minutes = Column(Integer, nullable=False, default=0)
     agreed_to_personal_data = Column(TINYINT(1), nullable=False, default=0)
     agreed_to_terms = Column(TINYINT(1), nullable=False, default=0)
-    # ДОБАВЛЕНО: Поле для отслеживания завершения онбординга
     onboarding_completed = Column(TINYINT(1), nullable=False, default=0)
     created_at = Column(TIMESTAMP, nullable=False, server_default=func.current_timestamp())
     updated_at = Column(TIMESTAMP, nullable=False, server_default=func.current_timestamp(), onupdate=func.current_timestamp())

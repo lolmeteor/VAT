@@ -1,5 +1,4 @@
-\`\`\`tsx file="app/analysis/[fileId]/page.tsx"
-[v0-no-op-code-block-prefix]"use client"
+"use client"
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
@@ -111,15 +110,17 @@ const app = FastAPI({
 })
 
 // CORS middleware setup
+const origins = [
+  "https://www.vertexassistant.ru",
+  "https://www.vertexassistant.ru:443",
+  "https://vertexassistant.ru",
+  "https://vertexassistant.ru:443"
+]
+
 app.add_middleware(
   CORSMiddleware,
   {
-    allow_origins: [
-      "https://www.vertexassistant.ru",
-      "https://www.vertexassistant.ru:443",
-      "https://vertexassistant.ru",
-      "https://vertexassistant.ru:443"
-    ],
+    allow_origins: origins,
     allow_credentials: true,
     allow_methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers: ["*"],
@@ -136,12 +137,13 @@ app.include_router(common.router, { prefix: "/api" })
 
 // Global exception handler
 app.exception_handler(Exception)((request: Request, exc: Exception) => {
+  console.error(`Глобальная ошибка: ${exc}`)
   return JSONResponse({
     status_code: 500,
     content: {
       success: false,
       message: "Внутренняя ошибка сервера",
-      detail: "Обратитесь в поддержку"
+      detail: "Произошла непредвиденная ошибка. Обратитесь в поддержку."
     }
   })
 })
@@ -149,9 +151,11 @@ app.exception_handler(Exception)((request: Request, exc: Exception) => {
 // Lifespan context manager
 const lifespan = async (app: FastAPI) => {
   // Startup
+  console.log("Запуск приложения VAT...")
   Base.metadata.create_all(bind=engine)
   yield
   // Shutdown
+  console.log("Остановка приложения VAT...")
 }
 
 // Run the FastAPI application
@@ -165,4 +169,3 @@ if (require.main === module) {
 }
 
 export default AnalysisPage
-\`\`\`
