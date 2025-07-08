@@ -30,7 +30,7 @@ class DocumentGeneratorService:
         return content.encode('utf-8')
 
     def generate_transcription_docx(self, transcription: Transcription) -> bytes:
-        """Генерирует DOCX файл с ��ранскрипцией."""
+        """Генерирует DOCX файл с ранскрипцией."""
         doc = Document()
         doc.add_heading('Транскрипция аудиофайла', 0)
 

@@ -83,7 +83,7 @@ async def upload_audio_file(
         transcription = Transcription(
             transcription_id=str(uuid.uuid4()),
             file_id=file_id,
-            status=ProcessingStatus.PENDING
+            status=ProcessingStatus.pending
         )
         
         db.add(transcription)
@@ -98,7 +98,7 @@ async def upload_audio_file(
         )
         
         if webhook_sent:
-            transcription.status = ProcessingStatus.PROCESSING
+            transcription.status = ProcessingStatus.processing
             db.commit()
         
         return AudioFileResponse.from_orm(audio_file)

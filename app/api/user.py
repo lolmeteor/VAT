@@ -78,7 +78,7 @@ async def get_user_stats(
         AudioFile, AudioFile.file_id == Analysis.transcription_id
     ).filter(
         AudioFile.user_id == current_user.user_id,
-        Analysis.status == ProcessingStatus.COMPLETED
+        Analysis.status == ProcessingStatus.completed
     ).scalar() or 0
     
     # Подсчитываем использованные минуты (примерная логика)
