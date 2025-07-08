@@ -44,7 +44,7 @@ async def start_analyses(
     transcription = db.query(Transcription).join(AudioFile).filter(
         Transcription.transcription_id == request_data.transcription_id,
         AudioFile.user_id == current_user.user_id,
-        Transcription.status == ProcessingStatus.completed
+        Transcription.status == ProcessingStatus.COMPLETED
     ).first()
     
     if not transcription:
@@ -78,7 +78,7 @@ async def start_analyses(
             analysis_id=str(uuid.uuid4()),
             transcription_id=request_data.transcription_id,
             analysis_type=analysis_type,
-            status=ProcessingStatus.pending
+            status=ProcessingStatus.PENDING
         )
         
         db.add(analysis)
@@ -95,13 +95,13 @@ async def start_analyses(
             )
             
             if webhook_sent:
-                analysis.status = ProcessingStatus.processing
+                analysis.status = ProcessingStatus.PROCESSING
                 db.commit()
             
             created_analyses.append(AnalysisResponse.from_orm(analysis))
             
         except Exception as e:
-            analysis.status = ProcessingStatus.failed
+            analysis.status = ProcessingStatus.FAILED
             analysis.error_message = f"Ошибка отправки вебхука: {str(e)}"
             db.commit()
             created_analyses.append(AnalysisResponse.from_orm(analysis))
