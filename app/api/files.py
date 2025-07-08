@@ -83,7 +83,7 @@ async def upload_audio_file(
         transcription = Transcription(
             transcription_id=str(uuid.uuid4()),
             file_id=file_id,
-            status=ProcessingStatus.pending
+            status=ProcessingStatus.pending  # ИСПРАВЛЕНО: lowercase
         )
         
         db.add(transcription)
@@ -98,7 +98,7 @@ async def upload_audio_file(
         )
         
         if webhook_sent:
-            transcription.status = ProcessingStatus.processing
+            transcription.status = ProcessingStatus.processing  # ИСПРАВЛЕНО: lowercase
             db.commit()
         
         return AudioFileResponse.from_orm(audio_file)
@@ -190,7 +190,7 @@ async def download_transcription(
     if not transcription:
         raise HTTPException(status_code=404, detail="Транскрипция не найдена или у вас нет доступа.")
     
-    if transcription.status != ProcessingStatus.COMPLETED:
+    if transcription.status != ProcessingStatus.completed:  # ИСПРАВЛЕНО: lowercase
         raise HTTPException(status_code=400, detail="Транскрипция еще не завершена.")
 
     doc_service = DocumentGeneratorService()

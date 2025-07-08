@@ -44,7 +44,7 @@ async def start_analyses(
     transcription = db.query(Transcription).join(AudioFile).filter(
         Transcription.transcription_id == request_data.transcription_id,
         AudioFile.user_id == current_user.user_id,
-        Transcription.status == ProcessingStatus.COMPLETED
+        Transcription.status == ProcessingStatus.completed  # ИСПРАВЛЕНО: lowercase
     ).first()
     
     if not transcription:
@@ -78,7 +78,7 @@ async def start_analyses(
             analysis_id=str(uuid.uuid4()),
             transcription_id=request_data.transcription_id,
             analysis_type=analysis_type,
-            status=ProcessingStatus.PENDING
+            status=ProcessingStatus.pending  # ИСПРАВЛЕНО: lowercase
         )
         
         db.add(analysis)
@@ -95,13 +95,13 @@ async def start_analyses(
             )
             
             if webhook_sent:
-                analysis.status = ProcessingStatus.PROCESSING
+                analysis.status = ProcessingStatus.processing  # ИСПРАВЛЕНО: lowercase
                 db.commit()
             
             created_analyses.append(AnalysisResponse.from_orm(analysis))
             
         except Exception as e:
-            analysis.status = ProcessingStatus.FAILED
+            analysis.status = ProcessingStatus.failed  # ИСПРАВЛЕНО: lowercase
             analysis.error_message = f"Ошибка отправки вебхука: {str(e)}"
             db.commit()
             created_analyses.append(AnalysisResponse.from_orm(analysis))
@@ -194,7 +194,7 @@ async def download_analysis(
     if not analysis:
         raise HTTPException(status_code=404, detail="Анализ не найден или у вас нет доступа.")
 
-    if analysis.status != ProcessingStatus.COMPLETED:
+    if analysis.status != ProcessingStatus.completed:  # ИСПРАВЛЕНО: lowercase
         raise HTTPException(status_code=400, detail="Анализ еще не завершен.")
 
     doc_service = DocumentGeneratorService()

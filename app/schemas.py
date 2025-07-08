@@ -52,14 +52,14 @@ class TranscriptionResponse(BaseModel):
     @computed_field
     @property
     def download_url_txt(self) -> Optional[str]:
-        if self.status == ProcessingStatus.COMPLETED:
+        if self.status == ProcessingStatus.completed:  # ИСПРАВЛЕНО: lowercase
             return f"/api/files/{self.file_id}/transcription/download/txt"
         return None
 
     @computed_field
     @property
     def download_url_docx(self) -> Optional[str]:
-        if self.status == ProcessingStatus.COMPLETED:
+        if self.status == ProcessingStatus.completed:  # ИСПРАВЛЕНО: lowercase
             return f"/api/files/{self.file_id}/transcription/download/docx"
         return None
     
@@ -78,7 +78,7 @@ class AnalysisResponse(BaseModel):
     @computed_field
     @property
     def download_url_docx(self) -> Optional[str]:
-        if self.status == ProcessingStatus.COMPLETED:
+        if self.status == ProcessingStatus.completed:  # ИСПРАВЛЕНО: lowercase
             return f"/api/analyses/{self.analysis_id}/download/docx"
         return None
 
@@ -86,7 +86,7 @@ class AnalysisResponse(BaseModel):
     @property
     def download_url_pdf(self) -> Optional[str]:
         # Генерация PDF пока не реализована, но можно оставить заглушку
-        if self.status == ProcessingStatus.COMPLETED:
+        if self.status == ProcessingStatus.completed:  # ИСПРАВЛЕНО: lowercase
             return f"/api/analyses/{self.analysis_id}/download/pdf"
         return None
     
