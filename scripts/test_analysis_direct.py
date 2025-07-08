@@ -39,7 +39,7 @@ def test_create_analysis():
         analysis = Analysis(
             analysis_id=str(uuid.uuid4()),
             transcription_id=transcription.transcription_id,
-            analysis_type=AnalysisType.KP,  # Используем enum напрямую
+            analysis_type=AnalysisType.kp,  # ИСПРАВЛЕНО: используем lowercase
             status=ProcessingStatus.pending
         )
         

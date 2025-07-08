@@ -21,18 +21,19 @@ class ProcessingStatus(str, enum.Enum):
     failed = "failed"
 
 class AnalysisType(str, enum.Enum):
-    KP = "kp"
-    FIRST_MEETING = "first_meeting"
-    FOLLOW_UP_MEETING = "follow_up_meeting"
-    PROTOCOL = "protocol"
-    SPEAKER1_PSYCHO = "speaker1_psycho"
-    SPEAKER1_NEGATIVE = "speaker1_negative"
-    SPEAKER2_PSYCHO = "speaker2_psycho"
-    SPEAKER2_NEGATIVE = "speaker2_negative"
-    SPEAKER3_PSYCHO = "speaker3_psycho"
-    SPEAKER3_NEGATIVE = "speaker3_negative"
-    SPEAKER4_PSYCHO = "speaker4_psycho"
-    SPEAKER4_NEGATIVE = "speaker4_negative"
+    # ИСПРАВЛЕНО: используем lowercase значения как в БД
+    kp = "kp"
+    first_meeting = "first_meeting"
+    follow_up_meeting = "follow_up_meeting"
+    protocol = "protocol"
+    speaker1_psycho = "speaker1_psycho"
+    speaker1_negative = "speaker1_negative"
+    speaker2_psycho = "speaker2_psycho"
+    speaker2_negative = "speaker2_negative"
+    speaker3_psycho = "speaker3_psycho"
+    speaker3_negative = "speaker3_negative"
+    speaker4_psycho = "speaker4_psycho"
+    speaker4_negative = "speaker4_negative"
 
 class PaymentStatus(str, enum.Enum):
     pending = "pending"
