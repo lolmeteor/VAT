@@ -49,6 +49,19 @@ function ResultsContent({ params }: { params: { fileId: string } }) {
     try {
       console.log("🔍 Загружаем данные для файла:", params.fileId)
 
+      // ДОБАВЛЯЕМ: Проверка авторизации
+      const authResponse = await fetch("/api/auth/me", {
+        credentials: "include",
+      })
+
+      if (!authResponse.ok) {
+        console.error("❌ Пользователь не авторизован, перенаправляем на главную")
+        window.location.href = "/"
+        return
+      }
+
+      console.log("✅ Пользователь авторизован")
+
       // Загружаем информацию о файле
       const fileResponse = await fetch(`/api/files/${params.fileId}`, {
         credentials: "include",
