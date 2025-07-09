@@ -66,10 +66,13 @@ function ResultsContent({ params }: { params: { fileId: string } }) {
         const transcriptionData = await transcriptionResponse.json()
         setTranscription(transcriptionData)
 
-        // Загружаем анализы для этой транскрипции
-        const analysesResponse = await fetch(`/api/analyses/transcription/${transcriptionData.transcription_id}`, {
-          credentials: "include",
-        })
+        // Загружаем ВСЕ анализы для этой транскрипции (без фильтрации по времени)
+        const analysesResponse = await fetch(
+          `/api/analyses/transcription/${transcriptionData.transcription_id}?all=true`,
+          {
+            credentials: "include",
+          },
+        )
 
         if (analysesResponse.ok) {
           const analysesData = await analysesResponse.json()
@@ -108,11 +111,15 @@ function ResultsContent({ params }: { params: { fileId: string } }) {
       kp: "Ключевые пункты",
       first_meeting: "Первая встреча",
       follow_up_meeting: "Повторная встреча",
-      protocol: "Протокол",
-      speaker1_psycho: "Психотип спикера 1",
-      speaker1_negative: "Негатив спикера 1",
-      speaker2_psycho: "Психотип спикера 2",
-      speaker2_negative: "Негатив спикера 2",
+      protocol: "Протокол встречи",
+      speaker1_psycho: "Психологический портрет спикера 1",
+      speaker1_negative: "Негативные моменты спикера 1",
+      speaker2_psycho: "Психологический портрет спикера 2",
+      speaker2_negative: "Негативные моменты спикера 2",
+      speaker3_psycho: "Психологический портрет спикера 3",
+      speaker3_negative: "Негативные моменты спикера 3",
+      speaker4_psycho: "Психологический портрет спикера 4",
+      speaker4_negative: "Негативные моменты спикера 4",
     }
     return typeMap[type] || type
   }
