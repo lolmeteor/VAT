@@ -66,17 +66,17 @@ function ResultsContent({ params }: { params: { fileId: string } }) {
         const transcriptionData = await transcriptionResponse.json()
         setTranscription(transcriptionData)
 
-        // Загружаем ВСЕ анализы для этой транскрипции (без фильтрации по времени)
-        const analysesResponse = await fetch(
-          `/api/analyses/transcription/${transcriptionData.transcription_id}?all=true`,
-          {
-            credentials: "include",
-          },
-        )
+        // Загружаем ВСЕ анализы для этой транскрипции
+        const analysesResponse = await fetch(`/api/analyses/transcription/${transcriptionData.transcription_id}`, {
+          credentials: "include",
+        })
 
         if (analysesResponse.ok) {
           const analysesData = await analysesResponse.json()
           setAnalyses(analysesData || [])
+        } else {
+          console.error("Ошибка загрузки анализов:", analysesResponse.status)
+          setAnalyses([])
         }
       }
     } catch (error) {
