@@ -126,8 +126,14 @@ async def get_analyses_for_transcription(
     if not transcription:
         raise HTTPException(status_code=404, detail="Транскрибация не найдена")
     
+    # Фильтруем анализы за последние 5 минут
+    from datetime import datetime, timedelta
+
+    cutoff_time = datetime.utcnow() - timedelta(minutes=5)
+
     analyses = db.query(Analysis).filter(
-        Analysis.transcription_id == transcription_id
+        Analysis.transcription_id == transcription_id,
+        Analysis.created_at >= cutoff_time
     ).order_by(Analysis.created_at.desc()).all()
     
     return [AnalysisResponse.from_orm(analysis) for analysis in analyses]
