@@ -47,40 +47,57 @@ function ResultsContent({ params }: { params: { fileId: string } }) {
 
   const fetchData = async () => {
     try {
+      console.log("🔍 Загружаем данные для файла:", params.fileId)
+
       // Загружаем информацию о файле
       const fileResponse = await fetch(`/api/files/${params.fileId}`, {
         credentials: "include",
       })
 
+      console.log("📁 Ответ файла:", fileResponse.status, fileResponse.statusText)
       if (fileResponse.ok) {
         const fileData = await fileResponse.json()
+        console.log("📁 Данные файла:", fileData)
         setFileInfo(fileData)
+      } else {
+        console.error("❌ Ошибка загрузки файла:", await fileResponse.text())
       }
 
       // Загружаем транскрипцию
+      console.log("📝 Запрашиваем транскрипцию...")
       const transcriptionResponse = await fetch(`/api/files/${params.fileId}/transcription`, {
         credentials: "include",
       })
 
+      console.log("📝 Ответ транскрипции:", transcriptionResponse.status, transcriptionResponse.statusText)
       if (transcriptionResponse.ok) {
         const transcriptionData = await transcriptionResponse.json()
+        console.log("📝 Данные транскрипции:", transcriptionData)
         setTranscription(transcriptionData)
 
         // Загружаем ВСЕ анализы для этой транскрипции
+        console.log("🔍 Запрашиваем анализы для transcription_id:", transcriptionData.transcription_id)
         const analysesResponse = await fetch(`/api/analyses/transcription/${transcriptionData.transcription_id}`, {
           credentials: "include",
         })
 
+        console.log("🔍 Ответ анализов:", analysesResponse.status, analysesResponse.statusText)
         if (analysesResponse.ok) {
           const analysesData = await analysesResponse.json()
+          console.log("🔍 Данные анализов:", analysesData)
           setAnalyses(analysesData || [])
         } else {
-          console.error("Ошибка загрузки анализов:", analysesResponse.status)
+          const errorText = await analysesResponse.text()
+          console.error("❌ Ошибка загрузки анализов:", analysesResponse.status, errorText)
           setAnalyses([])
         }
+      } else {
+        const errorText = await transcriptionResponse.text()
+        console.error("❌ Ошибка загрузки транскрипции:", transcriptionResponse.status, errorText)
+        console.log("⚠️ Анализы не будут загружены, так как нет транскрипции")
       }
     } catch (error) {
-      console.error("Ошибка загрузки данных:", error)
+      console.error("💥 Критическая ошибка загрузки данных:", error)
     } finally {
       setLoading(false)
       setRefreshing(false)
