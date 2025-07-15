@@ -5,6 +5,7 @@ import { Inter } from "next/font/google"
 import { cn } from "@/lib/utils"
 import { AuthProvider } from "@/contexts/AuthContext"
 import { Toaster } from "sonner"
+import Script from "next/script"
 
 const inter = Inter({
   subsets: ["latin", "cyrillic"],
@@ -25,6 +26,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ru">
+      <head>
+        <Script src="https://telegram.org/js/telegram-web-app.js" strategy="beforeInteractive" />
+      </head>
       <body className={cn("min-h-screen bg-muted font-sans antialiased", inter.variable)}>
         <AuthProvider>
           {children}
