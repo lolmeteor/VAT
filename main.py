@@ -14,7 +14,7 @@ from fastapi.responses import JSONResponse
 
 from app.config import settings
 from app.database import Base, engine
-from app.api import auth, files, analyses, webhooks, user, common
+from app.api import auth, files, analyses, webhooks, user, common, auth_webapp
 
 # ──────────────────────────── Логирование ──────────────────────────────
 logging.basicConfig(
@@ -56,7 +56,7 @@ app.add_middleware(
 )
 
 # ──────────────────────────── Роутеры API ───────────────────────────────
-for router in (common, auth, user, files, analyses, webhooks):
+for router in (common, auth, auth_webapp, user, files, analyses, webhooks):
     app.include_router(router.router, prefix="/api")
 
 # ─────────────────────── Глобальный обработчик ошибок ──────────────────

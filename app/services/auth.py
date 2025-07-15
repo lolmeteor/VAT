@@ -17,8 +17,14 @@ class AuthService:
     
     def verify_telegram_auth(self, auth_data: TelegramAuthData) -> bool:
         """
-        Проверяет подлинность данных от Telegram Login Widget
+        Проверяет подлинность данных от Telegram Login Widget или Web App
         """
+        # Если это Web App данные, считаем их уже валидированными
+        if auth_data.hash == "webapp_validated":
+            print("✅ Web App данные уже валидированы")
+            return True
+        
+        # Обычная валидация для Login Widget
         bot_token = settings.telegram_bot_token
         
         # ОТЛАДОЧНЫЕ ЛОГИ

@@ -7,7 +7,7 @@ import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Mic, Loader2 } from "lucide-react"
 import { useAuth } from "@/contexts/AuthContext"
-import { TelegramLoginButton } from "@/components/telegram-login-button"
+import { HybridTelegramAuth } from "@/components/hybrid-telegram-auth"
 
 export default function WelcomePage() {
   const [agreedPersonalData, setAgreedPersonalData] = useState(false)
@@ -133,7 +133,7 @@ export default function WelcomePage() {
           </div>
         </CardContent>
         <CardFooter className="flex flex-col items-center space-y-4">
-          <TelegramLoginButton onAuth={handleTelegramAuth} buttonSize="large" />
+          <HybridTelegramAuth onAuth={handleTelegramAuth} disabled={!allAgreementsChecked} />
           {!allAgreementsChecked && (
             <p className="text-xs text-destructive">Необходимо принять условия для входа через Telegram.</p>
           )}
