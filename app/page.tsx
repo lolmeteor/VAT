@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Label } from "@/components/ui/label"
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { Mic, Loader2 } from "lucide-react"
+import { Loader2 } from "lucide-react"
 import { useAuth } from "@/contexts/AuthContext"
 import { HybridTelegramAuth } from "@/components/hybrid-telegram-auth"
 
@@ -101,9 +101,10 @@ export default function WelcomePage() {
         {/* Контент поверх фона */}
         <div className="relative z-10">
           <CardHeader className="items-center text-center">
-            <Mic size={64} className="mb-4 text-white" />
-            <CardTitle className="text-3xl font-bold text-white">VERTEX AI ASSISTANT</CardTitle>
-            <CardDescription className="text-white/90">вы говорите - мы создаём аналитику</CardDescription>
+            <CardTitle className="text-4xl md:text-5xl font-bold text-white">VERTEX AI ASSISTANT</CardTitle>
+            <CardDescription className="text-lg md:text-xl text-white/90 font-medium">
+              вы говорите - мы создаём аналитику
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="space-y-3">
@@ -114,7 +115,7 @@ export default function WelcomePage() {
                   onCheckedChange={(checked) => setAgreedPersonalData(Boolean(checked))}
                   className="border-white/50 data-[state=checked]:bg-white data-[state=checked]:text-black"
                 />
-                <Label htmlFor="personal-data" className="text-sm font-medium text-white/90 text-center">
+                <Label htmlFor="personal-data" className="text-base md:text-lg font-medium text-white/90 text-center">
                   Согласен на обработку персональных данных
                 </Label>
               </div>
@@ -125,7 +126,7 @@ export default function WelcomePage() {
                   onCheckedChange={(checked) => setAgreedTerms(Boolean(checked))}
                   className="border-white/50 data-[state=checked]:bg-white data-[state=checked]:text-black"
                 />
-                <Label htmlFor="terms" className="text-sm font-medium text-white/90 text-center">
+                <Label htmlFor="terms" className="text-base md:text-lg font-medium text-white/90 text-center">
                   Согласен с пользовательским соглашением
                 </Label>
               </div>
