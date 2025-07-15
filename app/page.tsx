@@ -18,21 +18,20 @@ export default function WelcomePage() {
 
   const allAgreementsChecked = agreedPersonalData && agreedTerms
 
-  // Устанавливаем флаг клиентской стороны
+  // Определяем, что код выполняется на клиенте
   useEffect(() => {
     setIsClient(true)
   }, [])
 
+  // Если пользователь авторизован, проверяем завершён ли онбординг
   useEffect(() => {
     if (isClient && user && !authIsLoading) {
-      // Если пользователь уже авторизован, перенаправляем его
       checkOnboardingStatus()
     }
-  }, [user, authIsLoading, router, isClient])
+  }, [user, authIsLoading, isClient])
 
   const checkOnboardingStatus = async () => {
     try {
-      // Проверяем статус онбординга на сервере
       const response = await fetch("/api/user/onboarding-status", {
         credentials: "include",
       })
@@ -45,7 +44,6 @@ export default function WelcomePage() {
           router.push("/onboarding")
         }
       } else {
-        // Если не удалось получить статус, по умолчанию идем на онбординг
         router.push("/onboarding")
       }
     } catch (error) {
@@ -61,16 +59,13 @@ export default function WelcomePage() {
     }
     try {
       await login(telegramUserData)
-      alert("Успешная авторизация!")
-
-      // Проверяем статус онбординга
       await checkOnboardingStatus()
     } catch (error: any) {
       alert(`Ошибка авторизации: ${error.message || "Попробуйте снова."}`)
     }
   }
 
-  // Показываем загрузку до инициализации клиента
+  // Лоадер, пока проверяем сессию или работаем на сервере
   if (!isClient || authIsLoading) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center bg-primary p-4">
@@ -80,7 +75,7 @@ export default function WelcomePage() {
     )
   }
 
-  // Если пользователь уже загружен и он есть, не показываем страницу входа
+  // Если юзер уже авторизован, показываем редирект
   if (user) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center bg-primary p-4">
@@ -134,9 +129,6 @@ export default function WelcomePage() {
         </CardContent>
         <CardFooter className="flex flex-col items-center space-y-4">
           <HybridTelegramAuth onAuth={handleTelegramAuth} disabled={!allAgreementsChecked} />
-          {!allAgreementsChecked && (
-            <p className="text-xs text-destructive">Необходимо принять условия для входа через Telegram.</p>
-          )}
         </CardFooter>
       </Card>
     </div>
