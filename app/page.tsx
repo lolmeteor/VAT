@@ -18,12 +18,10 @@ export default function WelcomePage() {
 
   const allAgreementsChecked = agreedPersonalData && agreedTerms
 
-  // Определяем, что код выполняется на клиенте
   useEffect(() => {
     setIsClient(true)
   }, [])
 
-  // Если пользователь авторизован, проверяем завершён ли онбординг
   useEffect(() => {
     if (isClient && user && !authIsLoading) {
       checkOnboardingStatus()
@@ -59,92 +57,78 @@ export default function WelcomePage() {
     }
     try {
       await login(telegramUserData)
-      await checkOnboardingStatus()
     } catch (error: any) {
       alert(`Ошибка авторизации: ${error.message || "Попробуйте снова."}`)
     }
   }
 
-  // Лоадер, пока проверяем сессию или работаем на сервере
-  if (!isClient || authIsLoading) {
-    return (
-      <div className="flex min-h-screen flex-col items-center justify-center bg-primary p-4">
-        <Loader2 className="h-16 w-16 animate-spin text-secondary" />
-        <p className="mt-4 text-lg text-primary-foreground">Проверка авторизации...</p>
+  const renderLoader = (text: string) => (
+    <div
+      className="min-h-screen w-full bg-cover bg-center"
+      style={{ backgroundImage: "url('/images/welcome-bg.jpg')" }}
+    >
+      <div className="flex min-h-screen flex-col items-center justify-center bg-black/50 p-4">
+        <Loader2 className="h-16 w-16 animate-spin text-white/50" />
+        <p className="mt-4 text-lg text-white/80">{text}</p>
       </div>
-    )
+    </div>
+  )
+
+  if (!isClient || authIsLoading) {
+    return renderLoader("Проверка авторизации...")
   }
 
-  // Если юзер уже авторизован, показываем редирект
   if (user) {
-    return (
-      <div className="flex min-h-screen flex-col items-center justify-center bg-primary p-4">
-        <Loader2 className="h-16 w-16 animate-spin text-secondary" />
-        <p className="mt-4 text-lg text-primary-foreground">Перенаправление...</p>
-      </div>
-    )
+    return renderLoader("Перенаправление...")
   }
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-primary p-4">
-      <Card className="w-full max-w-md relative overflow-hidden shadow-xl bg-transparent border-none">
-        {/* Фоновое изображение */}
-        <div
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-          style={{
-            backgroundImage: "url('/images/welcome-bg.jpg')",
-          }}
-        />
-        {/* Полупрозрачный оверлей для лучшей читаемости текста */}
-        <div className="absolute inset-0 bg-black/30" />
-
-        {/* Контент поверх фона */}
-        <div className="relative z-10">
-          <CardHeader className="items-center text-center pb-4">
-            <CardTitle className="text-6xl md:text-7xl font-bold text-white leading-tight">
+    <div
+      className="min-h-screen w-full bg-cover bg-center"
+      style={{ backgroundImage: "url('/images/welcome-bg.jpg')" }}
+    >
+      <div className="flex min-h-screen flex-col items-center justify-center bg-black/30 p-4">
+        <Card className="w-full max-w-md overflow-hidden rounded-2xl border border-white/10 bg-black/20 shadow-2xl backdrop-blur-lg">
+          <CardHeader className="items-center text-center pt-10 pb-6">
+            <CardTitle className="text-4xl lg:text-5xl font-bold text-white tracking-wide">
               VERTEX AI ASSISTANT
             </CardTitle>
-            <CardDescription className="text-xl md:text-2xl text-white font-medium leading-tight mt-2">
+            <CardDescription className="mt-2 text-lg font-medium text-white/80">
               вы говорите - мы создаём аналитику
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4 py-4">
-            <div className="space-y-2">
-              <div className="flex items-center justify-center space-x-2">
+          <CardContent className="space-y-4 px-8 pt-4 pb-6">
+            <div className="space-y-3">
+              <div className="flex items-center space-x-3">
                 <Checkbox
                   id="personal-data"
                   checked={agreedPersonalData}
                   onCheckedChange={(checked) => setAgreedPersonalData(Boolean(checked))}
-                  className="border-white/50 data-[state=checked]:bg-white data-[state=checked]:text-black"
+                  className="h-5 w-5 border-white/50 data-[state=checked]:bg-white data-[state=checked]:text-black"
                 />
-                <Label
-                  htmlFor="personal-data"
-                  className="text-base md:text-lg font-medium text-white text-center leading-tight"
-                >
+                <Label htmlFor="personal-data" className="text-sm font-medium text-white/90">
                   Согласен на обработку персональных данных
                 </Label>
               </div>
-              <div className="flex items-center justify-center space-x-2">
+              <div className="flex items-center space-x-3">
                 <Checkbox
                   id="terms"
                   checked={agreedTerms}
                   onCheckedChange={(checked) => setAgreedTerms(Boolean(checked))}
-                  className="border-white/50 data-[state=checked]:bg-white data-[state=checked]:text-black"
+                  className="h-5 w-5 border-white/50 data-[state=checked]:bg-white data-[state=checked]:text-black"
                 />
-                <Label
-                  htmlFor="terms"
-                  className="text-base md:text-lg font-medium text-white text-center leading-tight"
-                >
+                <Label htmlFor="terms" className="text-sm font-medium text-white/90">
                   Согласен с пользовательским соглашением
                 </Label>
               </div>
             </div>
           </CardContent>
-          <CardFooter className="flex flex-col items-center space-y-4 text-white">
+          <CardFooter className="flex flex-col items-center space-y-3 px-8 pb-10">
             <HybridTelegramAuth onAuth={handleTelegramAuth} disabled={!allAgreementsChecked} />
+            <p className="text-xs text-white/50">Войдите через Telegram для доступа к сервису</p>
           </CardFooter>
-        </div>
-      </Card>
+        </Card>
+      </div>
     </div>
   )
 }
