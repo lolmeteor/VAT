@@ -87,16 +87,16 @@ export default function WelcomePage() {
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-primary p-4">
-      <Card className="w-full max-w-md relative overflow-hidden shadow-xl">
+      <Card className="w-full max-w-md relative overflow-hidden shadow-xl bg-transparent border-none">
         {/* Фоновое изображение */}
         <div
-          className="absolute inset-0 bg-contain bg-center bg-no-repeat"
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
           style={{
             backgroundImage: "url('/images/welcome-bg.jpg')",
           }}
         />
         {/* Полупрозрачный оверлей для лучшей читаемости текста */}
-        <div className="absolute inset-0 bg-black/40" />
+        <div className="absolute inset-0 bg-black/30" />
 
         {/* Контент поверх фона */}
         <div className="relative z-10">
