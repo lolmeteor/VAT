@@ -90,7 +90,7 @@ export default function WelcomePage() {
       <Card className="w-full max-w-md relative overflow-hidden shadow-xl">
         {/* Фоновое изображение */}
         <div
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+          className="absolute inset-0 bg-contain bg-center bg-no-repeat"
           style={{
             backgroundImage: "url('/images/welcome-bg.jpg')",
           }}
@@ -100,14 +100,16 @@ export default function WelcomePage() {
 
         {/* Контент поверх фона */}
         <div className="relative z-10">
-          <CardHeader className="items-center text-center">
-            <CardTitle className="text-4xl md:text-5xl font-bold text-white">VERTEX AI ASSISTANT</CardTitle>
-            <CardDescription className="text-lg md:text-xl text-white/90 font-medium">
+          <CardHeader className="items-center text-center pb-4">
+            <CardTitle className="text-6xl md:text-7xl font-bold text-white leading-tight">
+              VERTEX AI ASSISTANT
+            </CardTitle>
+            <CardDescription className="text-xl md:text-2xl text-white font-medium leading-tight mt-2">
               вы говорите - мы создаём аналитику
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="space-y-3">
+          <CardContent className="space-y-4 py-4">
+            <div className="space-y-2">
               <div className="flex items-center justify-center space-x-2">
                 <Checkbox
                   id="personal-data"
@@ -115,7 +117,10 @@ export default function WelcomePage() {
                   onCheckedChange={(checked) => setAgreedPersonalData(Boolean(checked))}
                   className="border-white/50 data-[state=checked]:bg-white data-[state=checked]:text-black"
                 />
-                <Label htmlFor="personal-data" className="text-base md:text-lg font-medium text-white/90 text-center">
+                <Label
+                  htmlFor="personal-data"
+                  className="text-base md:text-lg font-medium text-white text-center leading-tight"
+                >
                   Согласен на обработку персональных данных
                 </Label>
               </div>
@@ -126,13 +131,16 @@ export default function WelcomePage() {
                   onCheckedChange={(checked) => setAgreedTerms(Boolean(checked))}
                   className="border-white/50 data-[state=checked]:bg-white data-[state=checked]:text-black"
                 />
-                <Label htmlFor="terms" className="text-base md:text-lg font-medium text-white/90 text-center">
+                <Label
+                  htmlFor="terms"
+                  className="text-base md:text-lg font-medium text-white text-center leading-tight"
+                >
                   Согласен с пользовательским соглашением
                 </Label>
               </div>
             </div>
           </CardContent>
-          <CardFooter className="flex flex-col items-center space-y-4">
+          <CardFooter className="flex flex-col items-center space-y-4 text-white">
             <HybridTelegramAuth onAuth={handleTelegramAuth} disabled={!allAgreementsChecked} />
           </CardFooter>
         </div>
