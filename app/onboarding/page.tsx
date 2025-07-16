@@ -102,7 +102,7 @@ export default function OnboardingPage() {
           <CardDescription className="text-primary/90" />
         </CardHeader>
         <CardContent className="text-center">
-          <p className="text-sm text-primary/80 leading-snug max-w-xs mx-auto">
+          <p className="mb-6 text-base font-semibold leading-snug text-primary max-w-xs mx-auto">
             {intro}
           </p>
 
