@@ -97,7 +97,7 @@ export default function WelcomePage() {
               AI ASSISTANT
             </CardTitle>
             <CardDescription className="text-lg sm:text-xl font-medium text-white/90 leading-tight">
-              вы говорите - мы создаём аналитику
+              Вы говорите - мы создаём аналитику
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4 px-6 sm:px-8 pt-4 pb-6">

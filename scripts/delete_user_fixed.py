@@ -125,5 +125,5 @@ def delete_user_completely(user_id: str):
         db.close()
 
 if __name__ == "__main__":
-    user_id = "673770e6-97e8-4e3a-b5b1-90f2809372d4"
+    user_id = "e31c586f-3588-4776-b3c1-2c90582a25bc "
     delete_user_completely(user_id)
