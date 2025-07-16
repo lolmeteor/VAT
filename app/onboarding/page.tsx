@@ -1,106 +1,102 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Zap, Gift } from "lucide-react"
-import { cn } from "@/lib/utils"
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Zap, Gift, LucideIcon } from "lucide-react";
+import { cn } from "@/lib/utils";
 
-const onboardingSteps = [
+interface OnboardingStep {
+  icon: LucideIcon;
+  title: string;
+  intro: string;
+  bullets?: string[]; // отображаются в 2‑х колонках
+  checklist?: string[]; // отображается как нумерованный список
+}
+
+const onboardingSteps: OnboardingStep[] = [
   {
     icon: Zap,
     title: "Мощные инструменты анализа",
-    description:
-      "Загрузите запись - выберите нужные отчёты - получите файл анализа через пару минут.
-      • Полный текст c ролями спикеров
-• Отчёт о встрече: темы, решения, ответственные
-• Готовое коммерческое предложение
-• Разбор первой встречи с клиентом
-• Разбор повторной встречи
-• Психопрофиль клиента
-• Прогноз надёжности клиента"
+    intro:
+      "Загрузите запись — выберите нужные отчёты — получите файл анализа за пару минут.",
+    bullets: [
+      "Полный текст с разбиением по спикерам",
+      "Итоги встречи: темы, решения, ответственные",
+      "Коммерческое предложение",
+      "Разбор первой встречи",
+      "Разбор повторной встречи",
+      "Психопрофиль клиента",
+      "Прогноз надёжности клиента",
+    ],
   },
   {
     icon: Gift,
-    title: "Начните сейчас со 180 бесплатными минутами",
-    description:
-      "Тестируйте все модули, затем переключайтесь на гибкие тарифы без скрытых условий.
-      1. Загрузите аудиофай встречи.
-2. Отметьте галочками нужные виды анализа.
-3. Получите готовый TXT файл для скачивания"
+    title: "Начните сейчас со 180 бесплатными минутами",
+    intro:
+      "Тестируйте все модули, затем переключайтесь на гибкие тарифы без скрытых условий.",
+    checklist: [
+      "Загрузите аудиофайл встречи",
+      "Отметьте галочками нужные виды анализа",
+      "Получите готовый TXT‑отчёт",
+    ],
   },
-]
+];
 
 export default function OnboardingPage() {
-  const [currentStep, setCurrentStep] = useState(0)
-  const [isCompleting, setIsCompleting] = useState(false)
-  const router = useRouter()
+  const [currentStep, setCurrentStep] = useState(0);
+  const [isCompleting, setIsCompleting] = useState(false);
+  const router = useRouter();
 
-  const isFirstStep = currentStep === 0
-  const isLastStep = currentStep === onboardingSteps.length - 1
+  const isFirstStep = currentStep === 0;
+  const isLastStep = currentStep === onboardingSteps.length - 1;
 
   const handleNext = async () => {
     if (!isLastStep) {
-      setCurrentStep((prev) => prev + 1)
-    } else {
-      // ИСПРАВЛЕНО: Отправляем запрос на сервер для отметки завершения онбординга
-      setIsCompleting(true)
-      try {
-        const response = await fetch("/api/user/complete-onboarding", {
-          method: "POST",
-          credentials: "include",
-        })
-
-        if (response.ok) {
-          // ИСПРАВЛЕНО: Убираем localStorage, полагаемся только на сервер
-          router.push("/upload-audio")
-        } else {
-          console.error("Ошибка завершения онбординга")
-          router.push("/upload-audio") // Все равно переходим
-        }
-      } catch (error) {
-        console.error("Ошибка завершения онбординга:", error)
-        router.push("/upload-audio") // Все равно переходим
-      } finally {
-        setIsCompleting(false)
-      }
+      setCurrentStep((prev) => prev + 1);
+      return;
     }
-  }
+
+    await completeOnboarding();
+  };
 
   const handleBack = () => {
     if (!isFirstStep) {
-      setCurrentStep((prev) => prev - 1)
+      setCurrentStep((prev) => prev - 1);
     } else {
-      router.push("/") // Возврат на главную страницу
+      router.push("/");
     }
-  }
+  };
 
   const handleSkip = async () => {
-    // ИСПРАВЛЕНО: Отправляем запрос на сервер для отметки завершения онбординга
-    setIsCompleting(true)
+    await completeOnboarding();
+  };
+
+  const completeOnboarding = async () => {
+    setIsCompleting(true);
     try {
-      const response = await fetch("/api/user/complete-onboarding", {
+      await fetch("/api/user/complete-onboarding", {
         method: "POST",
         credentials: "include",
-      })
-
-      if (response.ok) {
-        // ИСПРАВЛЕНО: Убираем localStorage, полагаемся только на сервер
-        router.push("/upload-audio")
-      } else {
-        console.error("Ошибка завершения онбординга")
-        router.push("/upload-audio") // Все равно переходим
-      }
+      });
     } catch (error) {
-      console.error("Ошибка завершения онбординга:", error)
-      router.push("/upload-audio") // Все равно переходим
+      console.error("Ошибка при завершении онбординга", error);
     } finally {
-      setIsCompleting(false)
+      router.push("/upload-audio");
+      setIsCompleting(false);
     }
-  }
+  };
 
-  const { icon: Icon, title, description, englishTitle, englishDescription } = onboardingSteps[currentStep]
+  const { icon: Icon, title, intro, bullets, checklist } =
+    onboardingSteps[currentStep];
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-primary p-4">
@@ -110,21 +106,45 @@ export default function OnboardingPage() {
             <Icon size={32} className="text-secondary-foreground" />
           </div>
           <CardTitle className="text-2xl font-bold text-primary">{title}</CardTitle>
-          <CardDescription className="text-primary/90">{englishTitle}</CardDescription>
+          <CardDescription className="text-primary/90" />
         </CardHeader>
         <CardContent className="text-center">
-          <p className="text-sm text-primary/80">{description}</p>
-          <p className="mt-2 text-xs text-primary/60">{englishDescription}</p>
+          {/* Вступительный текст */}
+          <p className="text-sm text-primary/80">{intro}</p>
+
+          {/* Список в две колонки */}
+          {bullets && (
+            <div className="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-left text-sm text-primary/80">
+              {bullets.map((item) => (
+                <span key={item}>• {item}</span>
+              ))}
+            </div>
+          )}
+
+          {/* Нумерованный список */}
+          {checklist && (
+            <ol className="mt-4 list-decimal space-y-1 pl-5 text-left text-sm text-primary/80">
+              {checklist.map((item) => (
+                <li key={item}>{item}</li>
+              ))}
+            </ol>
+          )}
         </CardContent>
         <CardFooter className="flex flex-col space-y-4">
+          {/* Индикатор прогресса */}
           <div className="flex w-full items-center justify-center">
             {onboardingSteps.map((_, index) => (
               <div
                 key={index}
-                className={cn("mx-1 h-2 w-8 rounded-full", currentStep === index ? "bg-secondary" : "bg-accent/50")}
+                className={cn(
+                  "mx-1 h-2 w-8 rounded-full",
+                  currentStep === index ? "bg-secondary" : "bg-accent/50"
+                )}
               />
             ))}
           </div>
+
+          {/* Кнопки */}
           <div className="grid w-full grid-cols-3 gap-2">
             <Button
               variant="ghost"
@@ -147,11 +167,11 @@ export default function OnboardingPage() {
               className="bg-secondary text-secondary-foreground hover:bg-secondary/90"
               disabled={isCompleting}
             >
-              {isCompleting ? "..." : isLastStep ? "Начать" : "Далее"}
+              {isCompleting ? "…" : isLastStep ? "Начать" : "Далее"}
             </Button>
           </div>
         </CardFooter>
       </Card>
     </div>
-  )
+  );
 }
