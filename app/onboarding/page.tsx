@@ -29,7 +29,7 @@ const onboardingSteps: OnboardingStep[] = [
     intro:
       "Загрузите запись — выберите нужные отчёты — получите файл анализа за пару минут.",
     bullets: [
-      "Полный текст с разбиением по спикерам",
+      "Полный текст с ролями спикеров",
       "Итоги встречи: темы, решения, ответственные",
       "Коммерческое предложение",
       "Разбор первой встречи",
@@ -110,28 +110,30 @@ export default function OnboardingPage() {
         </CardHeader>
         <CardContent className="text-center">
           {/* Вступительный текст */}
-          <p className="text-sm text-primary/80 leading-snug">{intro}</p>
+          <p className="text-sm text-primary/80 leading-snug max-w-xs mx-auto">
+            {intro}
+          </p>
 
-          {/* Список в две колонки */}
+          {/* Список в две колонки, центрируем контейнер */}
           {bullets && (
-            <ul className="mt-4 columns-2 gap-4 list-disc text-left text-sm text-primary/80 pl-5 [column-fill:_balance]">
+            <ul className="mt-4 mx-auto grid w-max grid-cols-2 gap-x-6 gap-y-1 list-disc list-inside text-sm text-primary/80">
               {bullets.map((item) => (
-                <li key={item} className="break-inside-avoid-column leading-snug">
+                <li key={item} className="leading-snug">
                   {item}
                 </li>
               ))}
             </ul>
           )}
 
-          {/* Нумерованный список */}
+          {/* Буллет‑список */}
           {checklist && (
-            <ol className="mt-4 list-decimal space-y-1 pl-5 text-left text-sm text-primary/80">
+            <ul className="mt-4 mx-auto w-max list-disc list-inside space-y-1 text-sm text-primary/80">
               {checklist.map((item) => (
                 <li key={item} className="leading-snug">
                   {item}
                 </li>
               ))}
-            </ol>
+            </ul>
           )}
         </CardContent>
         <CardFooter className="flex flex-col space-y-4">
