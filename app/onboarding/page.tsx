@@ -18,8 +18,8 @@ interface OnboardingStep {
   icon: LucideIcon;
   title: string;
   intro: string;
-  bullets?: string[]; // отображаются в 2‑х колонках
-  checklist?: string[]; // отображается как нумерованный список
+  bullets?: string[];
+  checklist?: string[];
 }
 
 const onboardingSteps: OnboardingStep[] = [
@@ -29,7 +29,7 @@ const onboardingSteps: OnboardingStep[] = [
     intro:
       "Загрузите запись — выберите нужные отчёты — получите файл анализа за пару минут.",
     bullets: [
-      "Полный текст с разбиением по спикерам",
+      "Полный текст с разбиением по спикерам",
       "Итоги встречи: темы, решения, ответственные",
       "Коммерческое предложение",
       "Разбор первой встречи",
@@ -110,22 +110,26 @@ export default function OnboardingPage() {
         </CardHeader>
         <CardContent className="text-center">
           {/* Вступительный текст */}
-          <p className="text-sm text-primary/80">{intro}</p>
+          <p className="text-sm text-primary/80 leading-snug">{intro}</p>
 
           {/* Список в две колонки */}
           {bullets && (
-            <div className="mt-4 grid grid-cols-2 gap-x-4 gap-y-1 text-left text-sm text-primary/80">
+            <ul className="mt-4 columns-2 gap-4 list-disc text-left text-sm text-primary/80 pl-5 [column-fill:_balance]">
               {bullets.map((item) => (
-                <span key={item}>• {item}</span>
+                <li key={item} className="break-inside-avoid-column leading-snug">
+                  {item}
+                </li>
               ))}
-            </div>
+            </ul>
           )}
 
           {/* Нумерованный список */}
           {checklist && (
             <ol className="mt-4 list-decimal space-y-1 pl-5 text-left text-sm text-primary/80">
               {checklist.map((item) => (
-                <li key={item}>{item}</li>
+                <li key={item} className="leading-snug">
+                  {item}
+                </li>
               ))}
             </ol>
           )}
