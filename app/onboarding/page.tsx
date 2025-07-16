@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, Fragment } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
@@ -11,31 +11,25 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Zap, Gift, LucideIcon } from "lucide-react";
+import { Zap, Gift, ArrowDown, LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface OnboardingStep {
   icon: LucideIcon;
   title: string;
   intro: string;
-  bullets?: string[];
-  checklist?: string[];
+  flow: string[]; // последовательность рамок + стрелки
 }
 
 const onboardingSteps: OnboardingStep[] = [
   {
     icon: Zap,
     title: "Мощные инструменты анализа",
-    intro:
-      "Загрузите запись — выберите нужные отчёты — получите файл анализа за пару минут.",
-    bullets: [
-      "Полный текст с ролями спикеров",
-      "Итоги встречи: темы, решения, ответственные",
-      "Коммерческое предложение",
-      "Разбор первой встречи",
-      "Разбор повторной встречи",
-      "Психопрофиль клиента",
-      "Прогноз надёжности клиента",
+    intro: "Готово к работе за 3 шага",
+    flow: [
+      "Загрузите запись",
+      "Выберите нужные отчёты",
+      "Получите файл анализа за пару минут",
     ],
   },
   {
@@ -43,7 +37,7 @@ const onboardingSteps: OnboardingStep[] = [
     title: "Начните сейчас со 180 бесплатными минутами",
     intro:
       "Тестируйте все модули, затем переключайтесь на гибкие тарифы без скрытых условий.",
-    checklist: [
+    flow: [
       "Загрузите аудиофайл встречи",
       "Отметьте галочками нужные виды анализа",
       "Получите готовый TXT‑отчёт",
@@ -95,8 +89,7 @@ export default function OnboardingPage() {
     }
   };
 
-  const { icon: Icon, title, intro, bullets, checklist } =
-    onboardingSteps[currentStep];
+  const { icon: Icon, title, intro, flow } = onboardingSteps[currentStep];
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-primary p-4">
@@ -109,35 +102,25 @@ export default function OnboardingPage() {
           <CardDescription className="text-primary/90" />
         </CardHeader>
         <CardContent className="text-center">
-          {/* Вступительный текст */}
           <p className="text-sm text-primary/80 leading-snug max-w-xs mx-auto">
             {intro}
           </p>
 
-          {/* Список в две колонки, центрируем контейнер */}
-          {bullets && (
-            <ul className="mt-4 mx-auto max-w-[380px] grid grid-cols-2 gap-x-8 gap-y-1 list-disc list-inside text-left text-sm text-primary/80">
-              {bullets.map((item) => (
-                <li key={item} className="leading-snug break-normal">
-                  {item}
-                </li>
-              ))}
-            </ul>
-          )}
-
-          {/* Буллет‑список */}
-          {checklist && (
-            <ul className="mt-4 mx-auto w-max list-disc list-inside space-y-1 text-sm text-primary/80">
-              {checklist.map((item) => (
-                <li key={item} className="leading-snug">
-                  {item}
-                </li>
-              ))}
-            </ul>
-          )}
+          {/* Унифицированный flow */}
+          <div className="mt-6 flex flex-col items-center space-y-2">
+            {flow.map((line, idx) => (
+              <Fragment key={idx}>
+                <div className="w-full max-w-xs rounded-md border-2 border-secondary px-3 py-2 text-sm font-medium text-primary bg-transparent">
+                  {line}
+                </div>
+                {idx < flow.length - 1 && (
+                  <ArrowDown size={20} className="text-primary" />
+                )}
+              </Fragment>
+            ))}
+          </div>
         </CardContent>
         <CardFooter className="flex flex-col space-y-4">
-          {/* Индикатор прогресса */}
           <div className="flex w-full items-center justify-center">
             {onboardingSteps.map((_, index) => (
               <div
@@ -150,7 +133,6 @@ export default function OnboardingPage() {
             ))}
           </div>
 
-          {/* Кнопки */}
           <div className="grid w-full grid-cols-3 gap-2">
             <Button
               variant="ghost"
