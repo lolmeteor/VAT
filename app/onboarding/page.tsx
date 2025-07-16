@@ -116,9 +116,9 @@ export default function OnboardingPage() {
 
           {/* Список в две колонки, центрируем контейнер */}
           {bullets && (
-            <ul className="mt-4 mx-auto grid w-max grid-cols-2 gap-x-6 gap-y-1 list-disc list-inside text-sm text-primary/80">
+            <ul className="mt-4 mx-auto max-w-[380px] grid grid-cols-2 gap-x-8 gap-y-1 list-disc list-inside text-left text-sm text-primary/80">
               {bullets.map((item) => (
-                <li key={item} className="leading-snug">
+                <li key={item} className="leading-snug break-normal">
                   {item}
                 </li>
               ))}
