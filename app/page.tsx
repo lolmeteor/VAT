@@ -131,7 +131,6 @@ export default function WelcomePage() {
           </CardContent>
           <CardFooter className="flex flex-col items-center space-y-4 px-6 sm:px-8 pb-8 sm:pb-10">
             <HybridTelegramAuth onAuth={handleTelegramAuth} disabled={!allAgreementsChecked} />
-            <p className="text-xs sm:text-sm font-medium text-white/60">Войдите через Telegram для доступа к сервису</p>
           </CardFooter>
         </Card>
       </div>
