@@ -69,7 +69,7 @@ export default function WelcomePage() {
     >
       <div className="flex min-h-screen flex-col items-center justify-center bg-black/50 p-4">
         <Loader2 className="h-16 w-16 animate-spin text-white/50" />
-        <p className="mt-4 text-lg text-white/80">{text}</p>
+        <p className="mt-4 text-lg text-white/80 font-bold">{text}</p>
       </div>
     </div>
   )
@@ -88,44 +88,47 @@ export default function WelcomePage() {
       style={{ backgroundImage: "url('/images/welcome-bg.jpg')" }}
     >
       <div className="flex min-h-screen flex-col items-center justify-center bg-black/30 p-4">
-        <Card className="w-full max-w-md overflow-hidden rounded-2xl border border-white/10 bg-black/20 shadow-2xl backdrop-blur-lg">
-          <CardHeader className="items-center text-center pt-10 pb-6">
-            <CardTitle className="text-4xl lg:text-5xl font-bold text-white tracking-wide">
-              VERTEX AI ASSISTANT
+        <Card className="w-full max-w-2xl overflow-hidden rounded-2xl border border-white/10 bg-black/20 shadow-2xl backdrop-blur-lg">
+          <CardHeader className="items-center text-center pt-12 pb-8">
+            <CardTitle className="text-8xl lg:text-9xl font-bold text-white tracking-tight leading-none mb-4">
+              VERTEX
             </CardTitle>
-            <CardDescription className="mt-2 text-lg font-medium text-white/80">
+            <CardTitle className="text-6xl lg:text-7xl font-bold text-white tracking-tight leading-none mb-6">
+              AI ASSISTANT
+            </CardTitle>
+            <CardDescription className="text-xl lg:text-2xl font-medium text-white/90 leading-tight">
               вы говорите - мы создаём аналитику
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4 px-8 pt-4 pb-6">
-            <div className="space-y-3">
-              <div className="flex items-center space-x-3">
+          <CardContent className="space-y-6 px-10 pt-6 pb-8">
+            <div className="space-y-4">
+              <div className="flex items-center space-x-4">
                 <Checkbox
                   id="personal-data"
                   checked={agreedPersonalData}
                   onCheckedChange={(checked) => setAgreedPersonalData(Boolean(checked))}
-                  className="h-5 w-5 border-white/50 data-[state=checked]:bg-white data-[state=checked]:text-black"
+                  className="h-6 w-6 border-2 border-white/60 data-[state=checked]:bg-white data-[state=checked]:text-black"
                 />
-                <Label htmlFor="personal-data" className="text-sm font-medium text-white/90">
+                <Label htmlFor="personal-data" className="text-base font-semibold text-white/95 leading-tight">
                   Согласен на обработку персональных данных
                 </Label>
               </div>
-              <div className="flex items-center space-x-3">
+              <div className="flex items-center space-x-4">
                 <Checkbox
                   id="terms"
                   checked={agreedTerms}
                   onCheckedChange={(checked) => setAgreedTerms(Boolean(checked))}
-                  className="h-5 w-5 border-white/50 data-[state=checked]:bg-white data-[state=checked]:text-black"
+                  className="h-6 w-6 border-2 border-white/60 data-[state=checked]:bg-white data-[state=checked]:text-black"
                 />
-                <Label htmlFor="terms" className="text-sm font-medium text-white/90">
+                <Label htmlFor="terms" className="text-base font-semibold text-white/95 leading-tight">
                   Согласен с пользовательским соглашением
                 </Label>
               </div>
             </div>
           </CardContent>
-          <CardFooter className="flex flex-col items-center space-y-3 px-8 pb-10">
+          <CardFooter className="flex flex-col items-center space-y-4 px-10 pb-12">
             <HybridTelegramAuth onAuth={handleTelegramAuth} disabled={!allAgreementsChecked} />
-            <p className="text-xs text-white/50">Войдите через Telegram для доступа к сервису</p>
+            <p className="text-sm font-medium text-white/60">Войдите через Telegram для доступа к сервису</p>
           </CardFooter>
         </Card>
       </div>
